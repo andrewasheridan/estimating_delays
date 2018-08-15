@@ -239,7 +239,7 @@ class VratioDelayMagnitude(_DelayPredict):
             - call to make prediction
     
     Attributes:
-        data (list of complex floats): Visibility ratios
+        data (numpy array of complex or list of complex): Visibility ratios
         predictions (numpy array of floats): The converted raw magnitude predictions (see predict())
         raw_predictions (list of floats): The raw magnitude predictions from the network
     """
@@ -259,7 +259,6 @@ class VratioDelayMagnitude(_DelayPredict):
         """
         _DelayPredict.__init__(self, data = data)
 
-        #self.data = self._preprocess_data()
         self._model_path = _MAG_PATH
 
 
@@ -274,6 +273,20 @@ class VratioDelayMagnitude(_DelayPredict):
         magnitudes = np.arange(MIN_EST_MAG, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)
         return [magnitudes[x] for x in self._pred_cls]
     
+    def _convert_predictions(self):
+
+        if self._conversion_fn is None:
+            return self.raw_predictions
+
+        if self._conversion_fn is not None:
+            if type(self._conversion_fn) == str:
+                assert self._conversion_fn == 'default', 'Provided conversion function must be a callable function, None, or "default"'
+                return _default_conversion_fn(self.raw_predictions)
+
+            else:
+                assert callable(self._conversion_fn) == True, 'Provided conversion function must be a callable function, None, or "default"'
+                return self._conversion_fn(self.raw_predictions)
+
 
     def predict(self, conversion_fn='default'):
         """predict
@@ -291,18 +304,7 @@ class VratioDelayMagnitude(_DelayPredict):
         self._conversion_fn = conversion_fn
         self._predict()
         self.raw_predictions = self._pred_cls_to_magnitude()
-
-        if self._conversion_fn is None:
-            
-            self.predictions = self.raw_predictions
-
-        if self._conversion_fn == 'default':
-
-            self.predictions = _default_conversion_fn(self.raw_predictions)
-
-        else:
-
-            self.predictions = self._conversion_fn(self.raw_predictions)
+        self.predictions = self._convert_predictions()
 
         return np.array(self.predictions)
 
@@ -361,8 +363,10 @@ class VratioDelay(object):
         """
         signs = self._sign_evaluator.predict()
         mags = self._mag_evaluator.predict(conversion_fn=conversion_fn)
+
         self.raw_predictions = [self._mag_evaluator.raw_predictions[i]*signs[i] for i in range(len(signs))]
         self.predictions = signs*mags
+
         return self.predictions
 
 
@@ -376,7 +380,7 @@ class DelaySolver(object):
             ex: list_o_sep_pairs[0] = [(1, 2), (3, 4)]
             each length 2 sublist is made of two redundant separations, one in each tuple
     
-        v_ratios (list of complex floats): shape = (N, 60, 1024)
+        data (list of complex floats): shape = (N, 60, 1024)
     
             Complex visibility ratios made from the the corresponding redundant sep pairs in list_o_sep_pairs
     
@@ -395,9 +399,8 @@ class DelaySolver(object):
     
     def __init__(self,
                  list_o_sep_pairs,
-                 v_ratios,
+                 data,
                  conversion_fn='default',
-                 true_ant_delays={}, # dict {ant_idx : delay}
                 ):
         """__init__
 
@@ -405,9 +408,12 @@ class DelaySolver(object):
         construct A matrix.
 
         """
+        
+        assert np.array(list_o_sep_pairs).shape[1] == 2, 'Each sublist must have len = 2'
+        assert np.array(list_o_sep_pairs).shape[2] == 2, 'Each subsublist must have len = 2'
+        assert np.array(list_o_sep_pairs).dtype == int, 'Each subsublist must have elements with dtype = int'
         self._list_o_sep_pairs = list_o_sep_pairs # shape = (N, 2, 2)
-        self._v_ratios = v_ratios # complex, shape = (N, 60, 1024) # will be reshaped to (-1, 1, 1024, 1)
-        self._true_ant_delays = true_ant_delays
+
         self._conversion_fn = conversion_fn
 
         self.unique_ants = np.unique(list_o_sep_pairs)
@@ -415,7 +421,7 @@ class DelaySolver(object):
                                     
         self._make_A_from_list_o_sep_pairs()
 
-        self._predictor = VratioDelay(v_ratios)
+        self._predictor = VratioDelay(data)
         self._predictor.predict(conversion_fn=conversion_fn)
 
         self.v_ratio_row_predictions = self._predictor.predictions
@@ -434,8 +440,8 @@ class DelaySolver(object):
             list of ints: a row of A
     
         """
-        
-        a = np.array(list(sum(sep_pair, () ))) # [(1,2) , (3, 4)] -> [1, 2, 3, 4]
+        # assumes a sep_pair is a tuple
+        a = np.array(sum(sep_pair, () )) # [(1, 2) , (3, 4)] -> [1, 2, 3, 4]
 
         # construct the row
         # https://stackoverflow.com/a/29831596
@@ -476,7 +482,7 @@ class DelaySolver(object):
         self.A =  np.asarray(self.A).reshape(-1, self._max_ant_idx)
 
 
-    def true_b(self):
+    def true_b(self, true_ant_delays):
         """ true_b
 
         do A times x to find the true values for each visibility
