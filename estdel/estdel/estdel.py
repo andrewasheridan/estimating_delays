@@ -1,7 +1,7 @@
 """estdel - for estimating delays
  - Andrew Sheridan sheridan@berkeley.edu
 
-Estimate the overcall cable delay in visibility ratios.
+Estimate the overall cable delay in visibility ratios.
 
 For each list of 60 x 1024 complex visibility ratios produce 60 estimated cable delays.
 
@@ -45,6 +45,19 @@ _MAG_PATH = 'mag_NN_frozen.pb'
 # number of frequency channels
 N_FREQS = 1024
 
+# minimum frequency
+MIN_FREQ_GHZ = 0.100
+
+# maximum frequency
+MAX_FREQ_GHZ = 0.200
+
+# minimum magnitude of estimate
+MIN_EST_MAG = 0.0000
+
+# maximum magnitude of estimate
+MAX_EST_MAG = 0.0400
+
+ESTIMATE_WIDTH = 0.0001
 
 
 class _DelayPredict(object):
@@ -59,17 +72,18 @@ class _DelayPredict(object):
     def __init__(self, data):
         """__init__
         
-        Constants:
-            _n_freqs = 1024
-        
         Args:
             data (list of complex floats): Visibliity data
         """
-        self._data = data
-        self._n_freqs = N_FREQS
 
-        assert(self._data.shape[-1] == self._n_freqs)
+        assert type(data) == list or type(data) == np.ndarray, 'data should be list or numpy array'
 
+        self._data = np.array(data)
+
+        assert self._data.dtype == complex, 'data dtype must be complex'
+        assert self._data.shape[-1] == N_FREQS, 'data shape must be (N, {})'.format(N_FREQS)
+
+        self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, N_FREQS, 1)
 
     def _angle_tx(self, x):
         """_angle_tx
@@ -82,19 +96,12 @@ class _DelayPredict(object):
         Returns:
             numpy array of floats: scaled angle data
         """
-        
-        return (x + np.pi) / (2. * np.pi)
-    
+        tx = (x + np.pi) / (2. * np.pi)
 
-    def _preprocess_data(self):
-        """_preprocess_data
-        
-            Converts data from complex to real (angle), scales, and reshapes
-        
-        Returns:
-            numpy array of floats: Scaled and reshaped angle data
-        """
-        return self._angle_tx(np.angle(self._data)).reshape(-1,1,self._n_freqs,1)
+        assert np.min(tx) > 0, 'Angle scaling problem'
+        assert np.max(tx) < 1, 'Angle scaling problem'
+
+        return tx
 
 
     def _predict(self):
@@ -164,13 +171,12 @@ class VratioDelaySign(_DelayPredict):
         
         
         Args:
-            data (list of complex): shape = (N, 1024)
+            data (list of complex or numpy array of complex): shape = (N, 1024)
                 - redundant visibility ratios
         
         """
         _DelayPredict.__init__(self, data = data)
 
-        self.data = self._preprocess_data()
         self._model_path = _SIGN_PATH
 
 
@@ -215,7 +221,7 @@ def _default_conversion_fn(x):
         numpy array of floats: Converted predicted value
     """
     
-    freqs = np.linspace(0.100,0.200,N_FREQS) 
+    freqs = np.linspace(MIN_FREQ_GHZ, MAX_FREQ_GHZ, N_FREQS) 
     channel_width_in_GHz = np.mean(np.diff(freqs))
 
     return np.array(x) / channel_width_in_GHz
@@ -253,7 +259,7 @@ class VratioDelayMagnitude(_DelayPredict):
         """
         _DelayPredict.__init__(self, data = data)
 
-        self.data = self._preprocess_data()
+        #self.data = self._preprocess_data()
         self._model_path = _MAG_PATH
 
 
@@ -265,7 +271,7 @@ class VratioDelayMagnitude(_DelayPredict):
         Returns:
             list of floats: Magnitudes
         """
-        magnitudes = np.arange(0,0.04 + 0.0001, 0.0001)
+        magnitudes = np.arange(MIN_EST_MAG, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)
         return [magnitudes[x] for x in self._pred_cls]
     
 
