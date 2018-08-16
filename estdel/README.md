@@ -26,6 +26,8 @@ After making a prediction, `raw_predictions` as described above are available.
 
 If `conversion_fn` is set to `default`, then the frequency range &nu; is taken to be 1024 equal width frequency channels over a total of 0.100 GHz: `&nu; = np.linspace(0.100, 0.200, 1024) # GHz`. Each channel then is approximately 0.098 MHz wide. This has the effect of changing the smallest increment of delay from a unitless value of 0.0001 to about 1.023 nanoseconds, and changes the range of predicted delays to be about -409 nanoseconds to +409 nanoseconds.
 
+If you would like to use a different range of frequency channels of equal width, pass your own conversion function to `conversion_fn`.
+
 
 
 
