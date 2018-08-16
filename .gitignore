@@ -1,0 +1,10 @@
+*.pyc
+*.egg-info/
+*/build/
+*/dist/
+*__branch__.py
+*__gitlog__.py
+*__version__.py
+
+.DS_Store
+.ipynb_checkpoints/
