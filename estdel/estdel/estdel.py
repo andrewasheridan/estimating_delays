@@ -42,6 +42,9 @@ _SIGN_PATH = 'sign_NN_frozen.pb'
 # fn for best magnitude classifier
 _MAG_PATH = 'mag_NN_frozen.pb'
 
+# number of rows (times) in visibility 
+N_TIMES = 60
+
 # number of frequency channels
 N_FREQS = 1024
 
@@ -51,13 +54,14 @@ MIN_FREQ_GHZ = 0.100
 # maximum frequency
 MAX_FREQ_GHZ = 0.200
 
-# minimum magnitude of estimate
+# minimum magnitude of estimate (scaled down)
 MIN_EST_MAG = 0.0000
 
-# maximum magnitude of estimate
+# maximum magnitude of estimate (scaled down)
 MAX_EST_MAG = 0.0400
 
-ESTIMATE_WIDTH = 0.0001
+# width of magnitude classes (scaled down)
+ESTIMATE_WIDTH = 0.0001 
 
 
 class _DelayPredict(object):
@@ -65,23 +69,21 @@ class _DelayPredict(object):
     
     Base class for predictions.
     
-    Data processing and predictions.
-    
     """
     
     def __init__(self, data):
         """__init__
         
         Args:
-            data (list of complex floats): Visibliity data
+            data (numpy array of complex or list of complex): Visibliity data
         """
 
         assert type(data) == list or type(data) == np.ndarray, 'data should be list or numpy array'
 
         self._data = np.array(data)
 
-        assert self._data.dtype == complex, 'data dtype must be complex'
-        assert self._data.shape[-1] == N_FREQS, 'data shape must be (N, {})'.format(N_FREQS)
+        assert np.iscomplexobj(self._data) is True, 'data dtype must be complex'
+        assert self._data.shape[-1] == N_FREQS, 'data shape (last) must be ({})'.format(N_FREQS)
 
         self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, N_FREQS, 1)
 
@@ -98,8 +100,8 @@ class _DelayPredict(object):
         """
         tx = (x + np.pi) / (2. * np.pi)
 
-        assert np.min(tx) > 0, 'Angle scaling problem'
-        assert np.max(tx) < 1, 'Angle scaling problem'
+        assert np.min(tx) >= 0, 'Angle scaling problem'
+        assert np.max(tx) <= 1, 'Angle scaling problem'
 
         return tx
 
@@ -244,7 +246,7 @@ class VratioDelayMagnitude(_DelayPredict):
         raw_predictions (list of floats): The raw magnitude predictions from the network
     """
 
-    def __init__(self, data):
+    def __init__(self, data, conversion_fn='default'):
         """Preprocesses data for prediction.
         
             - converts complex data to angle
@@ -253,14 +255,20 @@ class VratioDelayMagnitude(_DelayPredict):
         
         
         Args:
-            data (list of complex floats): shape = (N, 1024)
+            data (numpy array of complex or list of complex): shape = (N, 1024)
                 - redundant visibility ratios
+            conversion_fn (None, str, or function):
+                - None - Do no conversion, output predictions are the raw predictions
+                - 'default' - convert raw predictions to ns by using frequencies 
+                    with a 0.100 GHz range over 1024 channels
+                - function - provide your own function to do the conversion
+                    - one required argument, the raw predictions, one output, the predictions
         
         """
         _DelayPredict.__init__(self, data = data)
 
         self._model_path = _MAG_PATH
-
+        self._conversion_fn = conversion_fn
 
     def _pred_cls_to_magnitude(self):
         """_pred_cls_to_magnitude
@@ -273,38 +281,32 @@ class VratioDelayMagnitude(_DelayPredict):
         magnitudes = np.arange(MIN_EST_MAG, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)
         return [magnitudes[x] for x in self._pred_cls]
     
-    def _convert_predictions(self):
+    def _convert_predictions(self, raw_predictions):
 
         if self._conversion_fn is None:
-            return self.raw_predictions
+            return raw_predictions
 
         if self._conversion_fn is not None:
             if type(self._conversion_fn) == str:
                 assert self._conversion_fn == 'default', 'Provided conversion function must be a callable function, None, or "default"'
-                return _default_conversion_fn(self.raw_predictions)
+                return _default_conversion_fn(raw_predictions)
 
             else:
                 assert callable(self._conversion_fn) == True, 'Provided conversion function must be a callable function, None, or "default"'
-                return self._conversion_fn(self.raw_predictions)
+                predictions = self._conversion_fn(raw_predictions)
+                return predictions
 
 
-    def predict(self, conversion_fn='default'):
+    def predict(self):
         """predict
-        
-        Args:
-            conversion_fn (None, str, or function): - None - Do no conversion, output predictions are the raw predictions
-                - 'default' - convert raw predictions to ns by using frequencies 
-                    with a 100MHz range over 1024 channels
-                - OR provide your own function to do the conversion
-                    - one required argument, the raw predictions
         
         Returns:
             numpy array of floats or list of floats: predictions
         """
-        self._conversion_fn = conversion_fn
+        
         self._predict()
         self.raw_predictions = self._pred_cls_to_magnitude()
-        self.predictions = self._convert_predictions()
+        self.predictions = self._convert_predictions(self.raw_predictions)
 
         return np.array(self.predictions)
 
@@ -324,7 +326,7 @@ class VratioDelay(object):
 
     """
     
-    def __init__(self, data):
+    def __init__(self, data, conversion_fn='default'):
         """__init__
         
         Preprocesses data for prediction.
@@ -340,29 +342,21 @@ class VratioDelay(object):
         
         """
         
-        self._mag_evaluator = VratioDelayMagnitude(data)
+        self._conversion_fn = conversion_fn
+        self._mag_evaluator = VratioDelayMagnitude(data, conversion_fn=conversion_fn)
         self._sign_evaluator = VratioDelaySign(data)
-    
+        
 
-    def predict(self, conversion_fn='default'):
+    def predict(self):
         """predict
         
             Make predictions
-        
-        Args:
-            conversion_fn (str, optional): Description
-            conversion_fn (None, 'default', or function
-                - None - Do no conversion, output predictions are the raw predictions
-                - 'default' - convert raw predictions to ns by using frequencies 
-                    with a 100MHz range over 1024 channels
-                - OR provide your own function to do the conversion
-                    - takes in one argument, the raw predictions
         
         Returns:
             numpy array of floats or list of floats: Predicted values
         """
         signs = self._sign_evaluator.predict()
-        mags = self._mag_evaluator.predict(conversion_fn=conversion_fn)
+        mags = self._mag_evaluator.predict()
 
         self.raw_predictions = [self._mag_evaluator.raw_predictions[i]*signs[i] for i in range(len(signs))]
         self.predictions = signs*mags
@@ -380,8 +374,8 @@ class DelaySolver(object):
             ex: list_o_sep_pairs[0] = [(1, 2), (3, 4)]
             each length 2 sublist is made of two redundant separations, one in each tuple
     
-        data (list of complex floats): shape = (N, 60, 1024)
-    
+        data (numpy array of complex or list of complex): shape = (N, 60, 1024) or (N * 60, 1024)
+            # ???: should we optionally allow less or more than 60 rows per visibility?
             Complex visibility ratios made from the the corresponding redundant sep pairs in list_o_sep_pairs
     
         true_ant_delays (dict): dict of delays with antennas as keys,
@@ -408,22 +402,20 @@ class DelaySolver(object):
         construct A matrix.
 
         """
-        
-        assert np.array(list_o_sep_pairs).shape[1] == 2, 'Each sublist must have len = 2'
-        assert np.array(list_o_sep_pairs).shape[2] == 2, 'Each subsublist must have len = 2'
-        assert np.array(list_o_sep_pairs).dtype == int, 'Each subsublist must have elements with dtype = int'
-        self._list_o_sep_pairs = list_o_sep_pairs # shape = (N, 2, 2)
+        self._list_o_sep_pairs = np.array(list_o_sep_pairs) # shape = (N, 2, 2)
+        assert self._list_o_sep_pairs.shape[1] == 2, 'Each sublist must have len = 2'
+        assert self._list_o_sep_pairs.shape[2] == 2, 'Each subsublist must have len = 2'
+        assert np.issubdtype(self._list_o_sep_pairs.dtype, np.integer) is True, 'Each subsublist must have elements with dtype like int'
 
-        self._conversion_fn = conversion_fn
-
-        self.unique_ants = np.unique(list_o_sep_pairs)
-        self._max_ant_idx = np.max(self.unique_ants) + 1 
+        self.unique_ants = np.unique(self._list_o_sep_pairs)
                                     
         self._make_A_from_list_o_sep_pairs()
 
-        self._predictor = VratioDelay(data)
-        self._predictor.predict(conversion_fn=conversion_fn)
+        self._predictor = VratioDelay(data, conversion_fn=conversion_fn)
 
+    def predict(self):
+
+        self._predictor.predict()
         self.v_ratio_row_predictions = self._predictor.predictions
         self.v_ratio_row_predictions_raw = self._predictor.raw_predictions
         
@@ -434,24 +426,26 @@ class DelaySolver(object):
         constructs a single row of A from a sep pair
 
         Args:
-            sep_pair (tuple of ints): Antennas for this visibility
+            sep_pair (numpy array of numpy arrays ints): Antennas for this visibility
 
         Returns;
             list of ints: a row of A
     
         """
-        # assumes a sep_pair is a tuple
-        a = np.array(sum(sep_pair, () )) # [(1, 2) , (3, 4)] -> [1, 2, 3, 4]
 
+        a = sep_pair.flatten()
+            
         # construct the row
+        # XXX: there must be a better way
         # https://stackoverflow.com/a/29831596
 
         # row is 4 x _max_ant_idx, all zeros
+        # ???: a.size is always 4 (checked indirectly in init, can I just replace a.size with 4?
         row = np.zeros((a.size, self._max_ant_idx), dtype = int)
 
         # for each element in sep_pair, got to the corresponding row
         # and assign the corresponding antenna the value 1
-        row[np.arange(a.size),a] = 1 
+        row[np.arange(a.size), a] = 1 
 
         # flip the sign of the middle two rows
         row[1] *= -1
@@ -469,15 +463,27 @@ class DelaySolver(object):
         Construct A row by row
         """
 
+        # _max_ant_idx is used to set the numberof columns in the matrix A
+        # There should be a column for each antenna 
+        self._max_ant_idx = np.max(self.unique_ants)
+
+        # In case the antenna indexed zero is inlcuded in list_o_sep_pairs 
+        if (0 in self.unique_ants) is True:
+            self._max_ant_idx = self._max_ant_idx + 1
+
+
+
+
         self.A = []
         for sep_pair in self._list_o_sep_pairs:
 
             # each visibility ratio of height 60 has one sep_pair
-            # so make 60 idential rows in A for each visibility
+            # so make 60 identical rows in A for each visibility
             # so that A is the correct shape
             # (because the prediction will output a unique prediction 
             # for each row in the visibility ratio)
-            self.A.append(np.tile(self._get_A_row(sep_pair), (60,1)))
+            # ???: Is there a better way to do this
+            self.A.append(np.tile(self._get_A_row(sep_pair), (N_TIMES, 1)))
 
         self.A =  np.asarray(self.A).reshape(-1, self._max_ant_idx)
 
@@ -492,8 +498,10 @@ class DelaySolver(object):
             numpy array of floats
         """
 
+        # ???: Is there a better way to do this check?
+        assert np.array(sorted(true_ant_delays.keys())).all() == self.unique_ants.all(), 'Each antenna present in a visibility needs a true delay here'
         
-        self.x = [self._true_ant_delays[ant] for ant in self.unique_ants]
+        self.x = [true_ant_delays[ant] for ant in self.unique_ants]
         self.b = np.matmul(self.A[:, self.unique_ants], self.x)
 
         return self.b
