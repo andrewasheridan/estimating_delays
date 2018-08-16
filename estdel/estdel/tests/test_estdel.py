@@ -1,26 +1,21 @@
 import unittest
-from estdel.estdel import _DelayPredict, DelaySolver, VratioDelayMagnitude
-#from estdel.estdel import N_FREQS
 import numpy as np
+
+from estdel.estdel import _DelayPredict, DelaySolver, VratioDelayMagnitude
+
 
 N_FREQS = 1024
 MAX_EST_MAG = 0.0400
-
-DATA = np.exp(-2j * np.pi * np.arange(N_FREQS) * MAX_EST_MAG).reshape(-1, N_FREQS) # shape = (1,  1024)
-
-# number of rows (times) in visibility 
 NUM_TIMES = 60
-
 MAX_EST_MAG = 0.0400
-
-V_DATA = np.tile(DATA, (NUM_TIMES, 1)) # shape = (60,  1024)
-
 ESTIMATE_WIDTH = 0.0001
 
+DATA = np.exp(-2j * np.pi * np.arange(N_FREQS) * MAX_EST_MAG).reshape(-1, N_FREQS) # shape = (1,  1024)
+V_DATA = np.tile(DATA, (NUM_TIMES, 1)) # shape = (60,  1024)
 
 
-
-
+########################################################################################################
+# test _DelayPredict
 class test_DelayPredict(unittest.TestCase):
 
 	# test __init__
@@ -31,7 +26,8 @@ class test_DelayPredict(unittest.TestCase):
 
 
 	def test_init_data_capture(self):
-		# XXX: Why test this, is there any way it could fail?
+		# ???: Why test this, is there any way it could fail?
+		# ???: Should I be testing every single assignment on init?
 
 		delayPredict = _DelayPredict(DATA)
 		np.testing.assert_array_equal(delayPredict._data, DATA)
@@ -68,19 +64,19 @@ class test_DelayPredict(unittest.TestCase):
 
 
 
-
+########################################################################################################
 # test VratioDelayMagnitude
 class test_VratioDelayMagnitude(unittest.TestCase):
 
 	# test _convert_precictions
-	def test_convert_predictions_wrong_string(self):
+	def test_convert_predictions_conversion_fn_correct_string(self):
 
 		conversion_fn = 'Default'
 		raw_predictions = np.arange(0, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)[:NUM_TIMES]
 		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
 		self.assertRaises(AssertionError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
 
-	def test_convert_predictions_conversion_not_callable(self):
+	def test_convert_predictions_conversion_fn_is_callable(self):
 
 		conversion_fn = [1]
 		raw_predictions = np.arange(0, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)[:NUM_TIMES]
@@ -90,7 +86,7 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 
 
 
-
+########################################################################################################
 # test DelaySolver
 class test_DelaySolver(unittest.TestCase):
 
