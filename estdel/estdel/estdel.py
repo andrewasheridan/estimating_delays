@@ -63,11 +63,12 @@ MAX_EST_MAG = 0.0400
 # width of magnitude classes (scaled down)
 ESTIMATE_WIDTH = 0.0001 
 
+# ???: Why have raw_predictions and predictions? Is it desireable to have the raw_predictions?
 
 class _DelayPredict(object):
     """_DelayPredict
     
-    Base class for predictions.
+    Handles data processing and prediction.
     
     """
     
@@ -100,6 +101,8 @@ class _DelayPredict(object):
         """
         tx = (x + np.pi) / (2. * np.pi)
 
+        # I dont see how these checks could ever possibly fire
+        # ... x here is passed data from np.angle()... 
         assert np.min(tx) >= 0, 'Angle scaling problem'
         assert np.max(tx) <= 1, 'Angle scaling problem'
 
@@ -282,17 +285,18 @@ class VratioDelayMagnitude(_DelayPredict):
         return [magnitudes[x] for x in self._pred_cls]
     
     def _convert_predictions(self, raw_predictions):
+        # pass through if conversion_fn is none else convert
 
         if self._conversion_fn is None:
             return raw_predictions
 
         if self._conversion_fn is not None:
             if type(self._conversion_fn) == str:
-                assert self._conversion_fn == 'default', 'Provided conversion function must be a callable function, None, or "default"'
+                assert self._conversion_fn == 'default', 'conversion_fn must be a callable function, None, or "default"'
                 return _default_conversion_fn(raw_predictions)
 
             else:
-                assert callable(self._conversion_fn) == True, 'Provided conversion function must be a callable function, None, or "default"'
+                assert callable(self._conversion_fn) == True, 'conversion_fn must be a callable function, None, or "default"'
                 predictions = self._conversion_fn(raw_predictions)
                 return predictions
 
@@ -342,7 +346,6 @@ class VratioDelay(object):
         
         """
         
-        self._conversion_fn = conversion_fn
         self._mag_evaluator = VratioDelayMagnitude(data, conversion_fn=conversion_fn)
         self._sign_evaluator = VratioDelaySign(data)
         
@@ -410,6 +413,7 @@ class DelaySolver(object):
         self.unique_ants = np.unique(self._list_o_sep_pairs)
                                     
         self._make_A_from_list_o_sep_pairs()
+        # ???: Should the creation of A and b be its own object?
 
         self._predictor = VratioDelay(data, conversion_fn=conversion_fn)
 
@@ -456,7 +460,6 @@ class DelaySolver(object):
 
         return row
 
-
     def _make_A_from_list_o_sep_pairs(self):
         """_make_A_from_list_o_sep_pairs
 
@@ -470,9 +473,6 @@ class DelaySolver(object):
         # In case the antenna indexed zero is inlcuded in list_o_sep_pairs 
         if (0 in self.unique_ants) is True:
             self._max_ant_idx = self._max_ant_idx + 1
-
-
-
 
         self.A = []
         for sep_pair in self._list_o_sep_pairs:
@@ -499,6 +499,7 @@ class DelaySolver(object):
         """
 
         # ???: Is there a better way to do this check?
+        # Every antenna present in unique antennas has to also be oresent in true antenna delays
         assert np.array(sorted(true_ant_delays.keys())).all() == self.unique_ants.all(), 'Each antenna present in a visibility needs a true delay here'
         
         self.x = [true_ant_delays[ant] for ant in self.unique_ants]
