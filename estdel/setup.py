@@ -47,4 +47,6 @@ setup(name = 'estdel',
           'tensorflow>=1.8.0',
       ],
       zip_safe=False,
-      include_package_data=True)
+      include_package_data=True,
+      test_suite="estdel.tests",
+      )
