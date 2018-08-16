@@ -34,6 +34,7 @@ import tensorflow as tf
 # suppress tensorflow INFO messages
 tf.logging.set_verbosity(tf.logging.WARN)
 
+# ???: Should i move the constants to their own module?
 _TRAINED_MODELS_DIR = 'trained_models'
 
 # fn for best postive-negative classifier
@@ -63,7 +64,7 @@ MAX_EST_MAG = 0.0400
 # width of magnitude classes (scaled down)
 ESTIMATE_WIDTH = 0.0001 
 
-# ???: Why have raw_predictions and predictions? Is it desireable to have the raw_predictions?
+
 
 class _DelayPredict(object):
     """_DelayPredict
@@ -206,6 +207,8 @@ class VratioDelaySign(_DelayPredict):
             numpy array of floats: sign predictions
         """
         self._predict()
+        # ???: Is it confusing to have raw_predcitions here when they are the same as predictions
+        #       - it follows the same pattern as mag predictor
         self.raw_predictions = self._pred_cls_to_sign()
         self.predictions = np.array(self.raw_predictions)
 
@@ -309,6 +312,7 @@ class VratioDelayMagnitude(_DelayPredict):
         """
         
         self._predict()
+        # ???: Is it desireable to have the raw_predictions available as well as the predictions?
         self.raw_predictions = self._pred_cls_to_magnitude()
         self.predictions = self._convert_predictions(self.raw_predictions)
 
