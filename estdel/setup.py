@@ -4,6 +4,7 @@ from setuptools import setup
 
 import os, glob, numpy, subprocess
 
+# ???: Where are all these print statements printed?
 print("Generating estdel/__version__.py: ", end='')
 __version__ = open('VERSION').read().strip()
 print(__version__)
@@ -50,3 +51,5 @@ setup(name = 'estdel',
       include_package_data=True,
       test_suite="estdel.tests",
       )
+
+# ???: On setup there are many 'Adding xxx to easy-install.pth file'. Why?
