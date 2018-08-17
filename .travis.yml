@@ -9,3 +9,6 @@ install:
 
 script:
   - coverage run --source estdel setup.py test
+
+after_success:
+    coveralls
