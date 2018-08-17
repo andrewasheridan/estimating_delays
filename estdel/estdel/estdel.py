@@ -35,7 +35,7 @@ import constants
 # suppress tensorflow INFO messages
 tf.logging.set_verbosity(tf.logging.WARN)
 
-# ???: Should i move the constants to their own module?
+# ???: Should i move these to constants.py?
 _TRAINED_MODELS_DIR = 'trained_models'
 
 # fn for best postive-negative classifier
