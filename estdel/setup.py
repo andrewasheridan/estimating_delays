@@ -44,7 +44,7 @@ setup(name = 'estdel',
       package_dir = {'estdel' : 'estdel'},
       packages = find_packages(),
       install_requires = [
-          'numpy>=1.2',
+          'numpy>=1.14.5',
           'tensorflow>=1.8.0',
       ],
       zip_safe=False,
