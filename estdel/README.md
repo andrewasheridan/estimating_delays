@@ -1,5 +1,5 @@
 # estdel
-
+[![Build Status](https://travis-ci.org/andrewasheridan/estimating_delays.svg?branch=travis_coveralls)](https://travis-ci.org/andrewasheridan/estimating_delays)
 Estimating interferometer antenna cable delays
 ## Prereqs
 ```
