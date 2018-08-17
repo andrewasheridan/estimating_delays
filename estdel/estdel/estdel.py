@@ -80,14 +80,22 @@ class _DelayPredict(object):
             data (numpy array of complex or list of complex): Visibliity data
         """
 
-        assert type(data) == list or type(data) == np.ndarray, 'data should be list or numpy array'
+        if type(data) is np.ndarray:
+            self._data = data
+        elif type(data) is list:
+            self._data = np.array(data)
+        else:
+            raise TypeError, 'data should be list or numpy array not {}'.format(type(data))
 
-        self._data = np.array(data)
+        if np.iscomplexobj(self._data) is not True:
+            raise TypeError, 'data must be complex'
 
-        assert np.iscomplexobj(self._data) is True, 'data dtype must be complex'
-        assert self._data.shape[-1] == N_FREQS, 'data shape (last) must be ({})'.format(N_FREQS)
+        if self._data.shape[-1] == N_FREQS:
+            self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, N_FREQS, 1)
+        else:
+            raise ValueError, 'last dim in data shape must be {} not {}'.format(N_FREQS, self._data.shape[-1])
 
-        self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, N_FREQS, 1)
+        
 
     def _angle_tx(self, x):
         """_angle_tx
@@ -102,10 +110,12 @@ class _DelayPredict(object):
         """
         tx = (x + np.pi) / (2. * np.pi)
 
-        # I dont see how these checks could ever possibly fire
+        # ???: I dont see how these checks could ever possibly fire
         # ... x here is passed data from np.angle()... 
-        assert np.min(tx) >= 0, 'Angle scaling problem'
-        assert np.max(tx) <= 1, 'Angle scaling problem'
+        if np.min(tx) < 0:
+            raise ValueError, 'Scaled angle data out of range, check that np.angle(data) is in range -pi to pi'
+        if np.max(tx) > 1:
+            raise ValueError, 'Scaled angle data out of range, check that np.angle(data) is in range -pi to pi'
 
         return tx
 
@@ -232,7 +242,7 @@ def _default_conversion_fn(x):
     freqs = np.linspace(MIN_FREQ_GHZ, MAX_FREQ_GHZ, N_FREQS) 
     channel_width_in_GHz = np.mean(np.diff(freqs))
 
-    return np.array(x) / channel_width_in_GHz
+    return x / channel_width_in_GHz
 
 
 
@@ -293,15 +303,16 @@ class VratioDelayMagnitude(_DelayPredict):
         if self._conversion_fn is None:
             return raw_predictions
 
-        if self._conversion_fn is not None:
-            if type(self._conversion_fn) == str:
-                assert self._conversion_fn == 'default', 'conversion_fn must be a callable function, None, or "default"'
+        elif type(self._conversion_fn) is str:
+            if self._conversion_fn is 'default':
                 return _default_conversion_fn(raw_predictions)
-
             else:
-                assert callable(self._conversion_fn) == True, 'conversion_fn must be a callable function, None, or "default"'
-                predictions = self._conversion_fn(raw_predictions)
-                return predictions
+                raise ValueError, 'conversion_fn must be a callable function, None, or "default" not "{}"'.format(self._conversion_fn)
+
+        elif callable(self._conversion_fn) is True:
+            return self._conversion_fn(raw_predictions)
+        else:
+            raise ValueError, 'conversion_fn must be a callable function, None, or "default"'
 
 
     def predict(self):
@@ -399,7 +410,7 @@ class DelaySolver(object):
     """
     
     def __init__(self,
-                 list_o_sep_pairs,
+                 list_o_sep_pairs,  # shape = (N, 2, 2)
                  data,
                  conversion_fn='default',
                 ):
@@ -409,10 +420,20 @@ class DelaySolver(object):
         construct A matrix.
 
         """
-        self._list_o_sep_pairs = np.array(list_o_sep_pairs) # shape = (N, 2, 2)
-        assert self._list_o_sep_pairs.shape[1] == 2, 'Each sublist must have len = 2'
-        assert self._list_o_sep_pairs.shape[2] == 2, 'Each subsublist must have len = 2'
-        assert np.issubdtype(self._list_o_sep_pairs.dtype, np.integer) is True, 'Each subsublist must have elements with dtype like int'
+        if type(list_o_sep_pairs) is list:
+            self._list_o_sep_pairs = np.array(list_o_sep_pairs)
+        elif type(list_o_sep_pairs) is np.ndarray:
+            self._list_o_sep_pairs = list_o_sep_pairs
+        else:
+            raise TypeError, 'list_o_sep_pairs must be list or numpy array, not {}'.type(type(list_o_sep_pairs))
+
+        if self._list_o_sep_pairs.shape[1] != 2:
+            raise ValueError, 'Each sublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[1])
+        if self._list_o_sep_pairs.shape[2] != 2:
+            raise ValueError, 'Each subsublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[2])
+        if np.issubdtype(self._list_o_sep_pairs.dtype, np.integer) is not True:
+            raise TypeError, 'Each subsublist must have elements with type like int not {}'.format(self._list_o_sep_pairs.dtype)
+
 
         self.unique_ants = np.unique(self._list_o_sep_pairs)
                                     

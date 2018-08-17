@@ -22,7 +22,7 @@ class test_DelayPredict(unittest.TestCase):
 	def test_init_data_is_list_or_array(self):
 
 		data = set(range(N_FREQS))
-		self.assertRaises(AssertionError, _DelayPredict, data)
+		self.assertRaises(TypeError, _DelayPredict, data)
 
 
 	def test_init_data_capture(self):
@@ -36,25 +36,25 @@ class test_DelayPredict(unittest.TestCase):
 	def test_init_data_type_is_complex(self):
 
 		data = np.real(DATA)
-		self.assertRaises(AssertionError, _DelayPredict, data)
+		self.assertRaises(TypeError, _DelayPredict, data)
 
 
 	def test_init_data_shape_last_is_N_FREQS(self):
 
 		data = np.exp(-2j * np.pi * np.arange(N_FREQS + 1) * MAX_EST_MAG).reshape(-1, N_FREQS + 1)
-		self.assertRaises(AssertionError, _DelayPredict, data)
+		self.assertRaises(ValueError, _DelayPredict, data)
 
 	# test _angle_tx
 	def test_angle_tx_scaling_lower_bound_is_zero(self):
 
 		x = np.array([-4])
-		self.assertRaises(AssertionError, _DelayPredict(DATA)._angle_tx, x)
+		self.assertRaises(ValueError, _DelayPredict(DATA)._angle_tx, x)
 
 
 	def test_angle_tx_scaling_upper_bound_is_one(self):
 
 		x = np.array([4])
-		self.assertRaises(AssertionError, _DelayPredict(DATA)._angle_tx, x)
+		self.assertRaises(ValueError, _DelayPredict(DATA)._angle_tx, x)
 
 	# test _predict 
 	#def test_predict....
@@ -74,14 +74,14 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 		conversion_fn = 'Default'
 		raw_predictions = np.arange(0, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)[:NUM_TIMES]
 		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
-		self.assertRaises(AssertionError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
+		self.assertRaises(ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
 
 	def test_convert_predictions_conversion_fn_is_callable(self):
 
 		conversion_fn = [1]
 		raw_predictions = np.arange(0, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)[:NUM_TIMES]
 		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
-		self.assertRaises(AssertionError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
+		self.assertRaises(ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
 
 
 
@@ -100,17 +100,17 @@ class test_DelaySolver(unittest.TestCase):
 	def test_init_list_o_sep_pairs_shape_1_is_2(self):
 
 		list_o_sep_pairs = [[(1, 2)]] # shape = (1, 1, 2)
-		self.assertRaises(AssertionError, DelaySolver, list_o_sep_pairs, V_DATA)
+		self.assertRaises(ValueError, DelaySolver, list_o_sep_pairs, V_DATA)
 
 	def test_init_list_o_sep_pairs_shape_2_is_2(self):
 
 		list_o_sep_pairs = [[(1, ), (2, )]] # shape = (1, 2, 1)
-		self.assertRaises(AssertionError, DelaySolver, list_o_sep_pairs, V_DATA)
+		self.assertRaises(ValueError, DelaySolver, list_o_sep_pairs, V_DATA)
 
 	def test_init_list_o_sep_pairs_dtype_is_int(self):
 
 		list_o_sep_pairs = [[(1., 2), (3, 4)]]
-		self.assertRaises(AssertionError, DelaySolver, list_o_sep_pairs, V_DATA)
+		self.assertRaises(TypeError, DelaySolver, list_o_sep_pairs, V_DATA)
 
 	# test true_b
 	def test_true_b_true_delays_keys_equals_unique_ants(self):
