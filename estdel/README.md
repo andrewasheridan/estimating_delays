@@ -18,13 +18,13 @@ Cable delays can be represented as the slope of the phase angle of complex data.
 
 To provide the ability to make predictions for data with different frequency ranges, the value &nu; used during network training was a unitless range of 1024 unit-width frequency channels: `freqs = np.arange(1024)`. 
 
-To accomodate the unitless unit-width frequency channels, raw predictions of the magnitude of delay fall in the range of 0.0000 to 0.0400, in increments of 0.0001. When taking into account sign, these range from -0.0400 to +0.0400.
+To accomodate the unitless unit-width frequency channels, raw predictions of the magnitude of delay fall in the range of 0.0000 to 0.0400, in increments of 0.0001. When taking into account sign, `raw_predictions` will have values in the range -0.0400 to +0.0400.
 
 ### Conversion of unitless predictions to predictions with units
 
-After making a prediction, `raw_predictions` as described above are available.
+If `conversion_fn` is set to `None`, then `predictions` is the same as `raw_predictions`, as described above.
 
-If `conversion_fn` is set to `default`, then the frequency range &nu; is taken to be 1024 equal width frequency channels over a total of 0.100 GHz:
+If `conversion_fn` is set to `'default'`, then the frequency range &nu; is taken to be 1024 equal width frequency channels over a total of 0.100 GHz:
 `freqs = np.linspace(0.100, 0.200, 1024) # GHz`. 
 
 Each channel then is approximately 0.098 MHz wide. This has the effect of changing the smallest increment of delay from a unitless value of 0.0001 to about 1.023 nanoseconds, and then `predictions` will contain delay values in the range of about -409 ns to +409 ns.
