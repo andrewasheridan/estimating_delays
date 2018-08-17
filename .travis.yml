@@ -5,6 +5,6 @@ python:
 install:
   - cd estdel
   - python setup.py install
-  - cd ..
+  - cd tests
 script:
-  - python estdel/tests/test_estdel.py
+  - python test_estdel.py
