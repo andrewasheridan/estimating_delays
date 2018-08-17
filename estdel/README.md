@@ -1,10 +1,12 @@
 # estdel
 [![Build Status](https://travis-ci.org/andrewasheridan/estimating_delays.svg?branch=travis_coveralls)](https://travis-ci.org/andrewasheridan/estimating_delays)
+[![Coverage Status](https://coveralls.io/repos/github/andrewasheridan/estimating_delays/badge.svg?branch=travis_coveralls)](https://coveralls.io/github/andrewasheridan/estimating_delays?branch=travis_coveralls)
+
 Estimating interferometer antenna cable delays
 ## Prereqs
 ```
-numpy
-tensorflow
+numpy (tested with 1.14.5 )
+tensorflow (tested with 1.8.0 )
 ```
 ## Description
 
