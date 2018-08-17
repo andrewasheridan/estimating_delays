@@ -3,6 +3,8 @@ language: python
 python:
   - "2.7"
 install:
+  - cd estdel
   - python estdel/setup.py install
+  - cd ..
 script:
   - python estdel/tests/test_estdel.py
