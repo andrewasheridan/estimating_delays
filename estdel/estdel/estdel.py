@@ -30,6 +30,7 @@ prediction = estimator.predict()
 import pkg_resources
 import numpy as np
 import tensorflow as tf
+import constants
 
 # suppress tensorflow INFO messages
 tf.logging.set_verbosity(tf.logging.WARN)
@@ -43,26 +44,7 @@ _SIGN_PATH = 'sign_NN_frozen.pb'
 # fn for best magnitude classifier
 _MAG_PATH = 'mag_NN_frozen.pb'
 
-# number of rows (times) in visibility 
-N_TIMES = 60
 
-# number of frequency channels
-N_FREQS = 1024
-
-# minimum frequency
-MIN_FREQ_GHZ = 0.100
-
-# maximum frequency
-MAX_FREQ_GHZ = 0.200
-
-# minimum magnitude of estimate (scaled down)
-MIN_EST_MAG = 0.0000
-
-# maximum magnitude of estimate (scaled down)
-MAX_EST_MAG = 0.0400
-
-# width of magnitude classes (scaled down)
-ESTIMATE_WIDTH = 0.0001 
 
 
 
@@ -90,10 +72,10 @@ class _DelayPredict(object):
         if np.iscomplexobj(self._data) is not True:
             raise TypeError, 'data must be complex'
 
-        if self._data.shape[-1] == N_FREQS:
-            self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, N_FREQS, 1)
+        if self._data.shape[-1] == constants.N_FREQS:
+            self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, constants.N_FREQS, 1)
         else:
-            raise ValueError, 'last dim in data shape must be {} not {}'.format(N_FREQS, self._data.shape[-1])
+            raise ValueError, 'last dim in data shape must be {} not {}'.format(constants.N_FREQS, self._data.shape[-1])
 
         
 
@@ -239,7 +221,7 @@ def _default_conversion_fn(x):
         numpy array of floats: Converted predicted value
     """
     
-    freqs = np.linspace(MIN_FREQ_GHZ, MAX_FREQ_GHZ, N_FREQS) 
+    freqs = np.linspace(constants.MIN_FREQ_GHZ, constants.MAX_FREQ_GHZ, constants.N_FREQS) 
     channel_width_in_GHz = np.mean(np.diff(freqs))
 
     return x / channel_width_in_GHz
@@ -294,7 +276,7 @@ class VratioDelayMagnitude(_DelayPredict):
         Returns:
             list of floats: Magnitudes
         """
-        magnitudes = np.arange(MIN_EST_MAG, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)
+        magnitudes = np.arange(constants.MIN_EST_MAG, constants.MAX_EST_MAG + constants.ESTIMATE_WIDTH, constants.ESTIMATE_WIDTH)
         return [magnitudes[x] for x in self._pred_cls]
     
     def _convert_predictions(self, raw_predictions):
@@ -508,7 +490,7 @@ class DelaySolver(object):
             # (because the prediction will output a unique prediction 
             # for each row in the visibility ratio)
             # ???: Is there a better way to do this
-            self.A.append(np.tile(self._get_A_row(sep_pair), (N_TIMES, 1)))
+            self.A.append(np.tile(self._get_A_row(sep_pair), (constants.N_TIMES, 1)))
 
         self.A =  np.asarray(self.A).reshape(-1, self._max_ant_idx)
 

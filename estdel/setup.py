@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import os, glob, numpy, subprocess
 
@@ -42,7 +42,7 @@ setup(name = 'estdel',
       author_email = 'sheridan@berkeley.edu',
       license = 'MIT',
       package_dir = {'estdel' : 'estdel'},
-      packages = ['estdel'],
+      packages = find_packages(),
       install_requires = [
           'numpy>=1.2',
           'tensorflow>=1.8.0',

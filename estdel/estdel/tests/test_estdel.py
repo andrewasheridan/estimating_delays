@@ -2,16 +2,11 @@ import unittest
 import numpy as np
 
 from estdel.estdel import _DelayPredict, DelaySolver, VratioDelayMagnitude
+import estdel.constants as constants
 
 
-N_FREQS = 1024
-MAX_EST_MAG = 0.0400
-NUM_TIMES = 60
-MAX_EST_MAG = 0.0400
-ESTIMATE_WIDTH = 0.0001
-
-DATA = np.exp(-2j * np.pi * np.arange(N_FREQS) * MAX_EST_MAG).reshape(-1, N_FREQS) # shape = (1,  1024)
-V_DATA = np.tile(DATA, (NUM_TIMES, 1)) # shape = (60,  1024)
+DATA = np.exp(-2j * np.pi * np.arange(constants.N_FREQS) * constants.MAX_EST_MAG).reshape(-1, constants.N_FREQS) # shape = (1,  1024)
+V_DATA = np.tile(DATA, (constants.N_TIMES, 1)) # shape = (60,  1024)
 
 
 ########################################################################################################
@@ -21,7 +16,7 @@ class test_DelayPredict(unittest.TestCase):
 	# test __init__
 	def test_init_data_is_list_or_array(self):
 
-		data = set(range(N_FREQS))
+		data = set(range(constants.N_FREQS))
 		self.assertRaises(TypeError, _DelayPredict, data)
 
 
@@ -41,7 +36,7 @@ class test_DelayPredict(unittest.TestCase):
 
 	def test_init_data_shape_last_is_N_FREQS(self):
 
-		data = np.exp(-2j * np.pi * np.arange(N_FREQS + 1) * MAX_EST_MAG).reshape(-1, N_FREQS + 1)
+		data = np.exp(-2j * np.pi * np.arange(constants.N_FREQS + 1) * constants.MAX_EST_MAG).reshape(-1, constants.N_FREQS + 1)
 		self.assertRaises(ValueError, _DelayPredict, data)
 
 	# test _angle_tx
@@ -72,14 +67,14 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 	def test_convert_predictions_conversion_fn_correct_string(self):
 
 		conversion_fn = 'Default'
-		raw_predictions = np.arange(0, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)[:NUM_TIMES]
+		raw_predictions = np.arange(0, constants.MAX_EST_MAG + constants.ESTIMATE_WIDTH, constants.ESTIMATE_WIDTH)[:constants.N_TIMES]
 		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
 		self.assertRaises(ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
 
 	def test_convert_predictions_conversion_fn_is_callable(self):
 
 		conversion_fn = [1]
-		raw_predictions = np.arange(0, MAX_EST_MAG + ESTIMATE_WIDTH, ESTIMATE_WIDTH)[:NUM_TIMES]
+		raw_predictions = np.arange(0, constants.MAX_EST_MAG + constants.ESTIMATE_WIDTH, constants.ESTIMATE_WIDTH)[:constants.N_TIMES]
 		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
 		self.assertRaises(ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
 
