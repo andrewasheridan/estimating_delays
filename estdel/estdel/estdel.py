@@ -67,15 +67,15 @@ class _DelayPredict(object):
         elif type(data) is list:
             self._data = np.array(data)
         else:
-            raise TypeError, 'data should be list or numpy array not {}'.format(type(data))
+            raise TypeError('data should be list or numpy array not {}'.format(type(data)))
 
         if np.iscomplexobj(self._data) is not True:
-            raise TypeError, 'data must be complex'
+            raise TypeError('data must be complex')
 
         if self._data.shape[-1] == constants.N_FREQS:
             self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, constants.N_FREQS, 1)
         else:
-            raise ValueError, 'last dim in data shape must be {} not {}'.format(constants.N_FREQS, self._data.shape[-1])
+            raise ValueError('last dim in data shape must be {} not {}'.format(constants.N_FREQS, self._data.shape[-1]))
 
         
 
@@ -95,9 +95,9 @@ class _DelayPredict(object):
         # ???: I dont see how these checks could ever possibly fire
         # ... x here is passed data from np.angle()... 
         if np.min(tx) < 0:
-            raise ValueError, 'Scaled angle data out of range, check that np.angle(data) is in range -pi to pi'
+            raise ValueError('Scaled angle data out of range, check that np.angle(data) is in range -pi to pi')
         if np.max(tx) > 1:
-            raise ValueError, 'Scaled angle data out of range, check that np.angle(data) is in range -pi to pi'
+            raise ValueError('Scaled angle data out of range, check that np.angle(data) is in range -pi to pi')
 
         return tx
 
@@ -289,12 +289,12 @@ class VratioDelayMagnitude(_DelayPredict):
             if self._conversion_fn is 'default':
                 return _default_conversion_fn(raw_predictions)
             else:
-                raise ValueError, 'conversion_fn must be a callable function, None, or "default" not "{}"'.format(self._conversion_fn)
+                raise ValueError('conversion_fn must be a callable function, None, or "default" not "{}"'.format(self._conversion_fn))
 
         elif callable(self._conversion_fn) is True:
             return self._conversion_fn(raw_predictions)
         else:
-            raise ValueError, 'conversion_fn must be a callable function, None, or "default"'
+            raise ValueError('conversion_fn must be a callable function, None, or "default"')
 
 
     def predict(self):
@@ -407,14 +407,14 @@ class DelaySolver(object):
         elif type(list_o_sep_pairs) is np.ndarray:
             self._list_o_sep_pairs = list_o_sep_pairs
         else:
-            raise TypeError, 'list_o_sep_pairs must be list or numpy array, not {}'.type(type(list_o_sep_pairs))
+            raise TypeError('list_o_sep_pairs must be list or numpy array, not {}'.type(type(list_o_sep_pairs)))
 
         if self._list_o_sep_pairs.shape[1] != 2:
-            raise ValueError, 'Each sublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[1])
+            raise ValueError('Each sublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[1]))
         if self._list_o_sep_pairs.shape[2] != 2:
-            raise ValueError, 'Each subsublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[2])
+            raise ValueError('Each subsublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[2]))
         if np.issubdtype(self._list_o_sep_pairs.dtype, np.integer) is not True:
-            raise TypeError, 'Each subsublist must have elements with type like int not {}'.format(self._list_o_sep_pairs.dtype)
+            raise TypeError('Each subsublist must have elements with type like int not {}'.format(self._list_o_sep_pairs.dtype))
 
 
         self.unique_ants = np.unique(self._list_o_sep_pairs)
@@ -513,5 +513,4 @@ class DelaySolver(object):
         self.b = np.matmul(self.A[:, self.unique_ants], self.x)
 
         return self.b
-
 

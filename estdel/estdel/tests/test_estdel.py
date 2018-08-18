@@ -51,9 +51,7 @@ class test_DelayPredict(unittest.TestCase):
 		x = np.array([4])
 		self.assertRaises(ValueError, _DelayPredict(DATA)._angle_tx, x)
 
-	# test _predict 
-	#def test_predict....
-	# XXX: How do I test this?
+	
 
 
 
@@ -78,6 +76,11 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
 		self.assertRaises(ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
 
+	# test predict 
+	#XXX: How do I test this?
+	def test_predict_works_at_all(self):
+		predictor = VratioDelayMagnitude(V_DATA)
+		predictions = predictor.predict()
 
 
 
