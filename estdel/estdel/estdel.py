@@ -30,7 +30,7 @@ prediction = estimator.predict()
 import pkg_resources
 import numpy as np
 import tensorflow as tf
-import constants
+from . import constants as constants
 
 # suppress tensorflow INFO messages
 tf.logging.set_verbosity(tf.logging.WARN)
