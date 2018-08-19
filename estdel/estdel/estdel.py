@@ -478,8 +478,8 @@ class DelaySolver(object):
         self._max_ant_idx = np.max(self.unique_ants)
 
         # In case the antenna indexed zero is inlcuded in list_o_sep_pairs 
-        if (0 in self.unique_ants) is True:
-            self._max_ant_idx = self._max_ant_idx + 1
+        #if (0 in self.unique_ants) is True:
+        self._max_ant_idx = self._max_ant_idx + 1
 
         self.A = []
         for sep_pair in self._list_o_sep_pairs:
