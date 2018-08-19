@@ -5,9 +5,17 @@
 Estimating interferometer antenna cable delays
 ## Prereqs
 ```
-numpy (tested with 1.14.5 )
-tensorflow (tested with 1.8.0 )
+numpy >= 1.14.5 # possible tensorflow bug with numpy 1.15.0
+tensorflow >= 1.8.0 # developed on 1.8, no known issues with 1.9 or 1.10
 ```
+### Python 2.7, 3.5
+
+Developement and initial evaluation was on Python 2.7. Limited testing on python 3.5 has not revealed any issues thus far.
+
+## Installatio
+
+Clone git repo and navigate to directory and run `python setup.py install`
+
 ## Description
 
 estdel estimates the antenna cable delays in interferometer visibility data. 
