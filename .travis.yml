@@ -8,7 +8,7 @@ install:
   - python setup.py install
 
 script:
-  - coverage run --source estdel setup.py test
+  - coverage run --omit=estdel/__branch__.py,estdel/__gitlog__.py,estdel/__version__.py --source estdel setup.py test
 
 after_success:
     coveralls
