@@ -1,6 +1,6 @@
 # estdel
-[![Build Status](https://travis-ci.org/andrewasheridan/estimating_delays.svg?branch=travis_coveralls)](https://travis-ci.org/andrewasheridan/estimating_delays)
-[![Coverage Status](https://coveralls.io/repos/github/andrewasheridan/estimating_delays/badge.svg?branch=travis_coveralls)](https://coveralls.io/github/andrewasheridan/estimating_delays?branch=travis_coveralls)
+[![Build Status](https://travis-ci.org/andrewasheridan/estimating_delays.svg?branch=test_predict)](https://travis-ci.org/andrewasheridan/estimating_delays)
+[![Coverage Status](https://coveralls.io/repos/github/andrewasheridan/estimating_delays/badge.svg?branch=test_predict)](https://coveralls.io/github/andrewasheridan/estimating_delays?branch=test_predict)
 
 Estimating interferometer antenna cable delays
 ## Prereqs
@@ -12,7 +12,7 @@ tensorflow >= 1.8.0 # developed on 1.8, no known issues with 1.9 or 1.10
 
 Developement and initial evaluation was on Python 2.7. Limited testing on python 3.5 has not revealed any issues thus far.
 
-## Installatio
+## Installation
 
 Clone git repo and navigate to directory and run `python setup.py install`
 
