@@ -24,8 +24,8 @@ class test_DelayPredict(unittest.TestCase):
 		# ???: Why test this, is there any way it could fail?
 		# ???: Should I be testing every single assignment on init?
 
-		delayPredict = _DelayPredict(DATA)
-		np.testing.assert_array_equal(delayPredict._data, DATA)
+		_delayPredict = _DelayPredict(DATA)
+		np.testing.assert_array_equal(_delayPredict._data, DATA)
 
 
 	def test_init_data_type_is_complex(self):
@@ -68,8 +68,8 @@ class test_VratioDelaySign(unittest.TestCase):
 		
 	# ???: How can I test this better?
 	def test_predict_predicts(self):
-		predictor = VratioDelayMagnitude(V_DATA)
-		predictions = predictor.predict()
+		_VratioDelaySign = VratioDelaySign(V_DATA)
+		predictions = _VratioDelaySign.predict()
 
 
 
@@ -102,8 +102,8 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 
 	# ???: How can I test this better?
 	def test_predict_predicts(self):
-		predictor = VratioDelayMagnitude(V_DATA)
-		predictions = predictor.predict()
+		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA)
+		predictions = _VratioDelayMagnitude.predict()
 
 
 
@@ -115,8 +115,8 @@ class test_DelaySolver(unittest.TestCase):
 	def test_init_list_o_sep_pairs_capture(self):
 
 		list_o_sep_pairs = [[(0, 1), (2, 3)]]
-		delaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
-		np.testing.assert_array_equal(delaySolver._list_o_sep_pairs, list_o_sep_pairs)
+		_DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
+		np.testing.assert_array_equal(_DelaySolver._list_o_sep_pairs, list_o_sep_pairs)
 
 	def test_init_list_o_sep_pairs_shape_1_is_2(self):
 
@@ -137,9 +137,9 @@ class test_DelaySolver(unittest.TestCase):
 	def test_true_b_true_delays_keys_equals_unique_ants(self):
 
 		list_o_sep_pairs = [[(0, 1), (2, 3)]]
-		delaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
+		_DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
 		true_ant_delays = {1: 1.2}
-		self.assertRaises(AssertionError, delaySolver.true_b, true_ant_delays)
+		self.assertRaises(AssertionError, _DelaySolver.true_b, true_ant_delays)
 
 
 
