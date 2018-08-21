@@ -137,5 +137,16 @@ class test_DelaySolver(unittest.TestCase):
 
 
 
+########################################################################################################
+# test constants
+class test_constants(unittest.TestCase):
+
+	# test description
+	def test_each_constant_has_description(self):
+
+		_constants =  [item for item in dir(constants) if not (item.startswith("__") or item.startswith("desc") or item.startswith("print"))]
+		_description = constants.description()
+		np.testing.assert_array_equal(sorted(_description.keys()), sorted(_constants))
+		
 if __name__ == '__main__':
 	unittest.main()

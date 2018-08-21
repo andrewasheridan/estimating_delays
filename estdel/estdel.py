@@ -26,12 +26,13 @@ prediction = estimator.predict()
 
 # prediction should output tau
 """
-
+#from __future__ import absolute_import
 import pkg_resources
 import numpy as np
 import tensorflow as tf
-from . import constants as constants
-
+#from . import constants as constants
+#import estdel.constants as constants
+import constants as constants
 # suppress tensorflow INFO messages
 tf.logging.set_verbosity(tf.logging.WARN)
 
@@ -116,7 +117,7 @@ class _DelayPredict(object):
             path = pkg_resources.resource_filename(resource_package, resource_path)
         else:
             raise IOError('Network file "{}" not found'.format(self._model_path))
-            
+
         with tf.gfile.GFile(path, "rb") as f:
             restored_graph_def = tf.GraphDef()
             restored_graph_def.ParseFromString(f.read())
