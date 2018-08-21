@@ -118,6 +118,12 @@ class test_DelaySolver(unittest.TestCase):
 		_DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
 		np.testing.assert_array_equal(_DelaySolver._list_o_sep_pairs, list_o_sep_pairs)
 
+		# test __init__
+	def test_init_list_o_sep_is_list_or_array(self):
+
+		list_o_sep_pairs = set((((0,1),(2,3))))
+		self.assertRaises(TypeError, DelaySolver, list_o_sep_pairs, V_DATA)
+
 	def test_init_list_o_sep_pairs_shape_1_is_2(self):
 
 		list_o_sep_pairs = [[(1, 2)]] # shape = (1, 1, 2)
