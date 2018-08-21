@@ -415,7 +415,7 @@ class DelaySolver(object):
         elif type(list_o_sep_pairs) is np.ndarray:
             self._list_o_sep_pairs = list_o_sep_pairs
         else:
-            raise TypeError('list_o_sep_pairs must be list or numpy array, not {}'.type(type(list_o_sep_pairs)))
+            raise TypeError('list_o_sep_pairs must be list or numpy array, not {}'.format(type(list_o_sep_pairs)))
 
         if self._list_o_sep_pairs.shape[1] != 2:
             raise ValueError('Each sublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[1]))
