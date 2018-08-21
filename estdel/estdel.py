@@ -30,9 +30,13 @@ prediction = estimator.predict()
 import pkg_resources
 import numpy as np
 import tensorflow as tf
+try:
+    import constants as constants
+except:
+    import estdel.constants as constants
 #from . import constants as constants
 #import estdel.constants as constants
-import constants as constants
+#import constants
 # suppress tensorflow INFO messages
 tf.logging.set_verbosity(tf.logging.WARN)
 
