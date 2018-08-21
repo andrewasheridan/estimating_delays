@@ -4,7 +4,6 @@ from setuptools import setup, find_packages
 
 import os, glob, numpy, subprocess
 
-# ???: Where are all these print statements printed?
 print("Generating estdel/__version__.py: ", end='')
 __version__ = open('VERSION').read().strip()
 print(__version__)
@@ -12,16 +11,20 @@ open('estdel/__version__.py','w').write('__version__="%s"'%__version__)
 
 #read the latest git status out to an installed file
 try:
+
     gitbranch = os.popen('git symbolic-ref -q HEAD').read().strip()
     print("Generating estdel/__branch__.py")
+
     gitlog = os.popen('git log -n1 --pretty="%h%n%s%n--%n%an%n%ae%n%ai"').read().strip()
     print("Generating estdel/__gitlog__.py.")
     print(gitlog)
+
 except:
     gitbranch = "unknown branch"
     gitlog = "git log not found"
-open('estdel/__branch__.py','w').write('__branch__ = \"%s\"'%gitbranch)
-open('estdel/__gitlog__.py','w').write('__gitlog__ = \"\"\"%s\"\"\"'%gitlog)
+
+open('estdel/__branch__.py','w').write('__branch__ = \"%s\"' %gitbranch)
+open('estdel/__gitlog__.py','w').write('__gitlog__ = \"\"\"%s\"\"\"' %gitlog)
 
 
 def get_description():
@@ -41,10 +44,10 @@ setup(name = 'estdel',
       author = 'Andrew Sheridan',
       author_email = 'sheridan@berkeley.edu',
       license = 'MIT',
-      package_dir = {'estdel' : 'estdel'},
+      #package_dir = {'estdel' : 'estdel'},
       packages = find_packages(),
       install_requires = [
-          'numpy==1.14.5',
+          'numpy>=1.14.5,!=1.15.0',
           'tensorflow>=1.8.0',
       ],
       zip_safe=False,
