@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from estdel.estdel import _DelayPredict, DelaySolver, VratioDelayMagnitude
+from estdel.estdel import _DelayPredict, DelaySolver, VratioDelayMagnitude, VratioDelaySign
 import estdel.constants as constants
 
 
@@ -53,7 +53,16 @@ class test_DelayPredict(unittest.TestCase):
 
 	
 
+########################################################################################################
+# test VratioDelayMagnitude
+class test_VratioDelaySign(unittest.TestCase):
 
+	def test_network_model_exists(self):
+
+		_VratioDelaySign = VratioDelaySign(V_DATA)
+		_VratioDelaySign._model_path = 'not_a_model.pb'
+		with self.assertRaises(IOError):
+			_VratioDelaySign.predict()
 
 
 
@@ -81,6 +90,13 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 	def test_predict_works_at_all(self):
 		predictor = VratioDelayMagnitude(V_DATA)
 		predictions = predictor.predict()
+
+	def test_network_model_exists(self):
+
+		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA)
+		_VratioDelayMagnitude._model_path = 'not_a_model.pb'
+		with self.assertRaises(IOError):
+			_VratioDelayMagnitude.predict()
 
 
 

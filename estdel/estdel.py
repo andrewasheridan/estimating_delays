@@ -112,8 +112,11 @@ class _DelayPredict(object):
 
         resource_package = __name__ 
         resource_path = '/'.join((_TRAINED_MODELS_DIR, self._model_path))
-        path = pkg_resources.resource_filename(resource_package, resource_path)
-
+        if pkg_resources.resource_exists(resource_package, resource_path) is True:
+            path = pkg_resources.resource_filename(resource_package, resource_path)
+        else:
+            raise IOError('Network file "{}" not found'.format(self._model_path))
+            
         with tf.gfile.GFile(path, "rb") as f:
             restored_graph_def = tf.GraphDef()
             restored_graph_def.ParseFromString(f.read())
