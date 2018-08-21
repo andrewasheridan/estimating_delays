@@ -57,12 +57,19 @@ class test_DelayPredict(unittest.TestCase):
 # test VratioDelayMagnitude
 class test_VratioDelaySign(unittest.TestCase):
 
-	def test_network_model_exists(self):
+	# test predict 
+	def test_predict_network_model_exists(self):
 
 		_VratioDelaySign = VratioDelaySign(V_DATA)
 		_VratioDelaySign._model_path = 'not_a_model.pb'
 		with self.assertRaises(IOError):
 			_VratioDelaySign.predict()
+
+		
+	# ???: How can I test this better?
+	def test_predict_predicts(self):
+		predictor = VratioDelayMagnitude(V_DATA)
+		predictions = predictor.predict()
 
 
 
@@ -86,17 +93,17 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 		self.assertRaises(ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions)
 
 	# test predict 
-	#XXX: How do I test this?
-	def test_predict_works_at_all(self):
-		predictor = VratioDelayMagnitude(V_DATA)
-		predictions = predictor.predict()
-
 	def test_network_model_exists(self):
 
 		_VratioDelayMagnitude = VratioDelayMagnitude(V_DATA)
 		_VratioDelayMagnitude._model_path = 'not_a_model.pb'
 		with self.assertRaises(IOError):
 			_VratioDelayMagnitude.predict()
+
+	# ???: How can I test this better?
+	def test_predict_predicts(self):
+		predictor = VratioDelayMagnitude(V_DATA)
+		predictions = predictor.predict()
 
 
 
@@ -147,6 +154,6 @@ class test_constants(unittest.TestCase):
 		_constants =  [item for item in dir(constants) if not (item.startswith("__") or item.startswith("desc") or item.startswith("print"))]
 		_description = constants.description()
 		np.testing.assert_array_equal(sorted(_description.keys()), sorted(_constants))
-		
+
 if __name__ == '__main__':
 	unittest.main()
