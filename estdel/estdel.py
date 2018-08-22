@@ -26,31 +26,29 @@ prediction = estimator.predict()
 
 # prediction should output tau
 """
-#from __future__ import absolute_import
+# from __future__ import absolute_import
 import pkg_resources
 import numpy as np
 import tensorflow as tf
+
 try:
     import constants as constants
 except:
     import estdel.constants as constants
-#from . import constants as constants
-#import estdel.constants as constants
-#import constants
+# from . import constants as constants
+# import estdel.constants as constants
+# import constants
 # suppress tensorflow INFO messages
 tf.logging.set_verbosity(tf.logging.WARN)
 
 # ???: Should i move these to constants.py?
-_TRAINED_MODELS_DIR = 'trained_models'
+_TRAINED_MODELS_DIR = "trained_models"
 
 # fn for best postive-negative classifier
-_SIGN_PATH = 'sign_NN_frozen.pb'
+_SIGN_PATH = "sign_NN_frozen.pb"
 
 # fn for best magnitude classifier
-_MAG_PATH = 'mag_NN_frozen.pb'
-
-
-
+_MAG_PATH = "mag_NN_frozen.pb"
 
 
 class _DelayPredict(object):
@@ -59,7 +57,7 @@ class _DelayPredict(object):
     Handles data processing and prediction.
     
     """
-    
+
     def __init__(self, data):
         """__init__
         
@@ -72,17 +70,23 @@ class _DelayPredict(object):
         elif type(data) is list:
             self._data = np.array(data)
         else:
-            raise TypeError('data should be list or numpy array not {}'.format(type(data)))
+            raise TypeError(
+                "data should be list or numpy array not {}".format(type(data))
+            )
 
         if np.iscomplexobj(self._data) is not True:
-            raise TypeError('data must be complex')
+            raise TypeError("data must be complex")
 
         if self._data.shape[-1] == constants.N_FREQS:
-            self.data = self._angle_tx(np.angle(self._data)).reshape(-1, 1, constants.N_FREQS, 1)
+            self.data = self._angle_tx(np.angle(self._data)).reshape(
+                -1, 1, constants.N_FREQS, 1
+            )
         else:
-            raise ValueError('last dim in data shape must be {} not {}'.format(constants.N_FREQS, self._data.shape[-1]))
-
-        
+            raise ValueError(
+                "last dim in data shape must be {} not {}".format(
+                    constants.N_FREQS, self._data.shape[-1]
+                )
+            )
 
     def _angle_tx(self, x):
         """_angle_tx
@@ -98,14 +102,17 @@ class _DelayPredict(object):
         tx = (x + np.pi) / (2. * np.pi)
 
         # ???: I dont see how these checks could ever possibly fire
-        # ... x here is passed data from np.angle()... 
+        # ... x here is passed data from np.angle()...
         if np.min(tx) < 0:
-            raise ValueError('Scaled angle data out of range, check that np.angle(data) is in range -pi to pi')
+            raise ValueError(
+                "Scaled angle data out of range, check that np.angle(data) is in range -pi to pi"
+            )
         if np.max(tx) > 1:
-            raise ValueError('Scaled angle data out of range, check that np.angle(data) is in range -pi to pi')
+            raise ValueError(
+                "Scaled angle data out of range, check that np.angle(data) is in range -pi to pi"
+            )
 
         return tx
-
 
     def _predict(self):
         """_predict
@@ -115,40 +122,42 @@ class _DelayPredict(object):
         
         """
 
-        resource_package = __name__ 
-        resource_path = '/'.join((_TRAINED_MODELS_DIR, self._model_path))
+        resource_package = __name__
+        resource_path = "/".join((_TRAINED_MODELS_DIR, self._model_path))
         if pkg_resources.resource_exists(resource_package, resource_path) is True:
             path = pkg_resources.resource_filename(resource_package, resource_path)
         else:
-            raise IOError('Network file "{}" not found'.format(self._model_path))
+            raise IOError("Network file '{}'' not found".format(self._model_path))
 
         with tf.gfile.GFile(path, "rb") as f:
             restored_graph_def = tf.GraphDef()
             restored_graph_def.ParseFromString(f.read())
 
         with tf.Graph().as_default() as graph:
-            tf.import_graph_def(restored_graph_def, input_map=None, return_elements=None, name="")
+            tf.import_graph_def(
+                restored_graph_def, input_map=None, return_elements=None, name=""
+            )
 
-            sample_keep_prob = graph.get_tensor_by_name('keep_probs/sample_keep_prob:0')
-            conv_keep_prob = graph.get_tensor_by_name('keep_probs/conv_keep_prob:0')
-            is_training = graph.get_tensor_by_name('is_training:0')
-            X = graph.get_tensor_by_name('sample/X:0')
+            sample_keep_prob = graph.get_tensor_by_name("keep_probs/sample_keep_prob:0")
+            conv_keep_prob = graph.get_tensor_by_name("keep_probs/conv_keep_prob:0")
+            is_training = graph.get_tensor_by_name("is_training:0")
+            X = graph.get_tensor_by_name("sample/X:0")
 
             # add hook to output operation
-            pred_cls = graph.get_tensor_by_name('predictions/ArgMax:0')
+            pred_cls = graph.get_tensor_by_name("predictions/ArgMax:0")
 
         with tf.Session(graph=graph) as sess:
-            feed_dict = {sample_keep_prob : 1.,
-                         conv_keep_prob : 1.,
-                         is_training : False,
-                         X: self.data}
+            feed_dict = {
+                sample_keep_prob: 1.,
+                conv_keep_prob: 1.,
+                is_training: False,
+                X: self.data,
+            }
 
             # collect prediction
-            self._pred_cls = sess.run(pred_cls, feed_dict = feed_dict)
+            self._pred_cls = sess.run(pred_cls, feed_dict=feed_dict)
 
             sess.close()
-
-
 
 
 class VratioDelaySign(_DelayPredict):
@@ -181,10 +190,9 @@ class VratioDelaySign(_DelayPredict):
                 - redundant visibility ratios
         
         """
-        _DelayPredict.__init__(self, data = data)
+        _DelayPredict.__init__(self, data=data)
 
         self._model_path = _SIGN_PATH
-
 
     def _pred_cls_to_sign(self):
         """_pred_cls_to_sign
@@ -197,8 +205,6 @@ class VratioDelaySign(_DelayPredict):
             list of ints: 
         """
         return [1 if x == 0 else -1 for x in self._pred_cls]
-         
-    
 
     def predict(self):
         """predict
@@ -228,13 +234,13 @@ def _default_conversion_fn(x):
     Returns:
         numpy array of floats: Converted predicted value
     """
-    
-    freqs = np.linspace(constants.MIN_FREQ_GHZ, constants.MAX_FREQ_GHZ, constants.N_FREQS) 
+
+    freqs = np.linspace(
+        constants.MIN_FREQ_GHZ, constants.MAX_FREQ_GHZ, constants.N_FREQS
+    )
     channel_width_in_GHz = np.mean(np.diff(freqs))
 
     return x / channel_width_in_GHz
-
-
 
 
 class VratioDelayMagnitude(_DelayPredict):
@@ -252,7 +258,7 @@ class VratioDelayMagnitude(_DelayPredict):
         raw_predictions (list of floats): The raw magnitude predictions from the network
     """
 
-    def __init__(self, data, conversion_fn='default'):
+    def __init__(self, data, conversion_fn="default"):
         """Preprocesses data for prediction.
         
             - converts complex data to angle
@@ -271,7 +277,7 @@ class VratioDelayMagnitude(_DelayPredict):
                     - one required argument, the raw predictions, one output, the predictions
         
         """
-        _DelayPredict.__init__(self, data = data)
+        _DelayPredict.__init__(self, data=data)
 
         self._model_path = _MAG_PATH
         self._conversion_fn = conversion_fn
@@ -284,9 +290,13 @@ class VratioDelayMagnitude(_DelayPredict):
         Returns:
             list of floats: Magnitudes
         """
-        magnitudes = np.arange(constants.MIN_EST_MAG, constants.MAX_EST_MAG + constants.ESTIMATE_WIDTH, constants.ESTIMATE_WIDTH)
+        magnitudes = np.arange(
+            constants.MIN_EST_MAG,
+            constants.MAX_EST_MAG + constants.ESTIMATE_WIDTH,
+            constants.ESTIMATE_WIDTH,
+        )
         return [magnitudes[x] for x in self._pred_cls]
-    
+
     def _convert_predictions(self, raw_predictions):
         # pass through if conversion_fn is none else convert
 
@@ -294,16 +304,21 @@ class VratioDelayMagnitude(_DelayPredict):
             return raw_predictions
 
         elif type(self._conversion_fn) is str:
-            if self._conversion_fn is 'default':
+            if self._conversion_fn is "default":
                 return _default_conversion_fn(raw_predictions)
             else:
-                raise ValueError('conversion_fn must be a callable function, None, or "default" not "{}"'.format(self._conversion_fn))
+                raise ValueError(
+                    "conversion_fn must be a callable function, None, or 'default' not '{}".format(
+                        self._conversion_fn
+                    )
+                )
 
         elif callable(self._conversion_fn) is True:
             return self._conversion_fn(raw_predictions)
         else:
-            raise ValueError('conversion_fn must be a callable function, None, or "default"')
-
+            raise ValueError(
+                "conversion_fn must be a callable function, None, or 'default'"
+            )
 
     def predict(self):
         """predict
@@ -311,7 +326,7 @@ class VratioDelayMagnitude(_DelayPredict):
         Returns:
             numpy array of floats or list of floats: predictions
         """
-        
+
         self._predict()
         # ???: Is it desireable to have the raw_predictions available as well as the predictions?
         self.raw_predictions = self._pred_cls_to_magnitude()
@@ -334,8 +349,8 @@ class VratioDelay(object):
         predictions (numpy array of floats or list of floats) = The converted raw predictions
 
     """
-    
-    def __init__(self, data, conversion_fn='default'):
+
+    def __init__(self, data, conversion_fn="default"):
         """__init__
         
         Preprocesses data for prediction.
@@ -350,10 +365,9 @@ class VratioDelay(object):
                 - redundant visibility ratios
         
         """
-        
+
         self._mag_evaluator = VratioDelayMagnitude(data, conversion_fn=conversion_fn)
         self._sign_evaluator = VratioDelaySign(data)
-        
 
     def predict(self):
         """predict
@@ -366,12 +380,12 @@ class VratioDelay(object):
         signs = self._sign_evaluator.predict()
         mags = self._mag_evaluator.predict()
 
-        self.raw_predictions = [self._mag_evaluator.raw_predictions[i]*signs[i] for i in range(len(signs))]
-        self.predictions = signs*mags
+        self.raw_predictions = [
+            self._mag_evaluator.raw_predictions[i] * signs[i] for i in range(len(signs))
+        ]
+        self.predictions = signs * mags
 
         return self.predictions
-
-
 
 
 class DelaySolver(object):
@@ -398,12 +412,10 @@ class DelaySolver(object):
         v_ratio_row_predictions_raw (list of floats): Predicted values with no conversion
         x (list floats): True delays in order of antenna
     """
-    
-    def __init__(self,
-                 list_o_sep_pairs,  # shape = (N, 2, 2)
-                 data,
-                 conversion_fn='default',
-                ):
+
+    def __init__(
+        self, list_o_sep_pairs, data, conversion_fn="default"  # shape = (N, 2, 2)
+    ):
         """__init__
 
         Preprocess data, make predictions, covert data to ns, 
@@ -415,18 +427,33 @@ class DelaySolver(object):
         elif type(list_o_sep_pairs) is np.ndarray:
             self._list_o_sep_pairs = list_o_sep_pairs
         else:
-            raise TypeError('list_o_sep_pairs must be list or numpy array, not {}'.format(type(list_o_sep_pairs)))
+            raise TypeError(
+                "list_o_sep_pairs must be list or numpy array, not {}".format(
+                    type(list_o_sep_pairs)
+                )
+            )
 
         if self._list_o_sep_pairs.shape[1] != 2:
-            raise ValueError('Each sublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[1]))
+            raise ValueError(
+                "Each sublist must have len = 2 not {}".format(
+                    self._list_o_sep_pairs.shape[1]
+                )
+            )
         if self._list_o_sep_pairs.shape[2] != 2:
-            raise ValueError('Each subsublist must have len = 2 not {}'.format(self._list_o_sep_pairs.shape[2]))
+            raise ValueError(
+                "Each subsublist must have len = 2 not {}".format(
+                    self._list_o_sep_pairs.shape[2]
+                )
+            )
         if np.issubdtype(self._list_o_sep_pairs.dtype, np.integer) is not True:
-            raise TypeError('Each subsublist must have elements with type like int not {}'.format(self._list_o_sep_pairs.dtype))
-
+            raise TypeError(
+                "Each subsublist must have elements with type like int not {}".format(
+                    self._list_o_sep_pairs.dtype
+                )
+            )
 
         self.unique_ants = np.unique(self._list_o_sep_pairs)
-                                    
+
         self._make_A_from_list_o_sep_pairs()
         # ???: Should the creation of A and b be its own object?
 
@@ -437,7 +464,6 @@ class DelaySolver(object):
         self._predictor.predict()
         self.v_ratio_row_predictions = self._predictor.predictions
         self.v_ratio_row_predictions_raw = self._predictor.raw_predictions
-        
 
     def _get_A_row(self, sep_pair):
         """_get_A_row
@@ -453,25 +479,25 @@ class DelaySolver(object):
         """
 
         a = sep_pair.flatten()
-            
+
         # construct the row
         # XXX: there must be a better way
         # https://stackoverflow.com/a/29831596
 
         # row is 4 x _max_ant_idx, all zeros
         # ???: a.size is always 4 (checked indirectly in init, can I just replace a.size with 4?
-        row = np.zeros((a.size, self._max_ant_idx), dtype = int)
+        row = np.zeros((a.size, self._max_ant_idx), dtype=int)
 
         # for each element in sep_pair, got to the corresponding row
         # and assign the corresponding antenna the value 1
-        row[np.arange(a.size), a] = 1 
+        row[np.arange(a.size), a] = 1
 
         # flip the sign of the middle two rows
         row[1] *= -1
         row[2] *= -1
 
         # add the rows, row is now 1 x _max_ant_idx
-        row = np.sum(row, axis = 0)
+        row = np.sum(row, axis=0)
 
         return row
 
@@ -482,11 +508,11 @@ class DelaySolver(object):
         """
 
         # _max_ant_idx is used to set the numberof columns in the matrix A
-        # There should be a column for each antenna 
+        # There should be a column for each antenna
         self._max_ant_idx = np.max(self.unique_ants)
 
-        # In case the antenna indexed zero is inlcuded in list_o_sep_pairs 
-        #if (0 in self.unique_ants) is True:
+        # In case the antenna indexed zero is inlcuded in list_o_sep_pairs
+        # if (0 in self.unique_ants) is True:
         self._max_ant_idx = self._max_ant_idx + 1
 
         self.A = []
@@ -495,13 +521,12 @@ class DelaySolver(object):
             # each visibility ratio of height 60 has one sep_pair
             # so make 60 identical rows in A for each visibility
             # so that A is the correct shape
-            # (because the prediction will output a unique prediction 
+            # (because the prediction will output a unique prediction
             # for each row in the visibility ratio)
             # ???: Is there a better way to do this
             self.A.append(np.tile(self._get_A_row(sep_pair), (constants.N_TIMES, 1)))
 
-        self.A =  np.asarray(self.A).reshape(-1, self._max_ant_idx)
-
+        self.A = np.asarray(self.A).reshape(-1, self._max_ant_idx)
 
     def true_b(self, true_ant_delays):
         """ true_b
@@ -515,10 +540,11 @@ class DelaySolver(object):
 
         # ???: Is there a better way to do this check?
         # Every antenna present in unique antennas has to also be oresent in true antenna delays
-        assert np.array(sorted(true_ant_delays.keys())).all() == self.unique_ants.all(), 'Each antenna present in a visibility needs a true delay here'
-        
+        assert (
+            np.array(sorted(true_ant_delays.keys())).all() == self.unique_ants.all()
+        ), "Each antenna present in a visibility needs a true delay here"
+
         self.x = [true_ant_delays[ant] for ant in self.unique_ants]
         self.b = np.matmul(self.A[:, self.unique_ants], self.x)
 
         return self.b
-
