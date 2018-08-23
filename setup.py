@@ -23,22 +23,26 @@ except:
     gitbranch = "unknown branch"
     gitlog = "git log not found"
 
-# ???: Why are the strings in this line so crazy?
-open("estdel/__branch__.py", "w").write('__branch__ = \"%s\"' %gitbranch)
-open("estdel/__gitlog__.py", "w").write('__gitlog__ = \"\"\"%s\"\"\"' %gitlog)
+open("estdel/__branch__.py", "w").write('__branch__ = "%s"' % gitbranch)
+open("estdel/__gitlog__.py", "w").write('__gitlog__ = """%s"""' % gitlog)
 
 
 def get_description():
-    lines = [L.strip() for L in open("README.md").readlines()]
-    d_start = None
-    for cnt, L in enumerate(lines):
-        if L.startswith("## Description"):
-            d_start = cnt + 1
-        # ???: Why is this elif statement so confusing?
-        elif not d_start is None:
-            if len(L) == 0:
-                return " ".join(lines[d_start:cnt])
-    raise RuntimeError("Bad README")
+    def get_description_lines():
+        seen_desc = False
+
+        with open('README.md') as f:
+            for line in f:
+                if seen_desc:
+                    if line.startswith('##'):
+                        break
+                    line = line.strip()
+                    if line:
+                        yield line
+                elif line.startswith('## Description'):
+                    seen_desc = True
+
+    return ' '.join(get_description_lines())
 
 
 setup(
@@ -50,10 +54,8 @@ setup(
     author="Andrew Sheridan",
     author_email="sheridan@berkeley.edu",
     license="MIT",
-    # package_dir = {'estdel' : 'estdel'},
     packages=find_packages(),
     install_requires=[
-        # 'numpy>=1.14.5,!=1.15.0',
         "tensorflow>=1.8.0",
         "numpy!=1.15.0",
     ],
