@@ -1,8 +1,10 @@
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 
-from setuptools import setup, find_packages
+from setuptools import find_packages
+from setuptools import setup
 
 print("Generating estdel/__version__.py: ", end="")
 __version__ = open("VERSION").read().strip()
