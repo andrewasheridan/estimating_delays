@@ -41,6 +41,46 @@ Each channel then is approximately 0.098 MHz wide. This has the effect of changi
 
 If you would like to use a different range of frequency channels of equal width, pass your own conversion function to `conversion_fn`, `predictions` will then have values in the commensurate range.
 
+## Usage
+In general:
+ - Pass visibility data to one of the predictor objects 
+ - Call its `predict` method:
 
+```
+import estdel
+
+# pass complex visibilites to VratioDelay
+predictor = estdel.VratioDelay(visibilities)
+
+# call predict
+predictions = predictor.predict()
+```
+
+`predictions` is a list of floats of the delays. If each visibility has `num_times` rows, then we can print the mean delay of each visibiliy like so:
+
+```
+# mean value for each visibility
+for i in range(num_visibilites):
+    mean_value = np.mean(predictions[i * num_times : (i + 1) * num_times])
+    print("{:7.2f} ns".format(mean_value))
+```
+
+Which produces the output:
+```
+   9.21 ns
+-274.16 ns
+ 352.94 ns
+ -69.56 ns
+ 360.10 ns
+ 247.57 ns
+ -32.74 ns
+ 150.38 ns
+ 409.20 ns
+ 192.32 ns
+```
+
+## Processing Time
+
+On a 2015 12" Macbook (1.1 GHz Intel Core M (1.9 Turbo), no GPU), processing 10 60x1024 visibilities takes ~7 seconds. Processing 10 takes ~1 minute.
 
 
