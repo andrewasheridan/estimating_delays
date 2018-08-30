@@ -81,6 +81,27 @@ Which produces the output:
 
 ## Processing Time
 
-On a 2015 12" Macbook (1.1 GHz Intel Core M (1.9 Turbo), no GPU), processing 10 60x1024 visibilities takes ~7 seconds. Processing 10 takes ~1 minute.
+### GPU
 
+If your system has more than one GPU make sure to specifiy a single GPU for tensorflow to use, otherwise tensorflow will claim all memory on all devices.
+```
+# do this before importing estdel
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+```
 
+On a system with a 24 core Intel Xeon CPU  @ 2.30GHz (Turbo 2.8), 128GB RAM, and an Nvidia GeForce GTX TITAN w/ 6GB RAM:
+
+Processing visibilities that are 60x1024:
+ -   10 visibilities ~4 seconds
+ -  100 visibilities ~7 seconds
+ -  500 visibilities ~14 seconds
+ - More than ~600 causes an out of memory exception :( 
+
+Using an Nvidia GeForce GTX 1080 w/ 8GB RAM produces approximately the same results.
+
+### CPU only
+On the Xeon system with the GPUs disabled, processing 500 visibilities takes ~50 seconds.
+
+On a 2015 12" Macbook with a 2 core  Intel Core M  @ 1.1 GHz (Turbo 1.9), 8GB RAM, and with no GPU, processing 100 visibilities takes ~1 minute.
