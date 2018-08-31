@@ -18,8 +18,9 @@ DATA = np.exp(
 )  # shape = (1,  1024)
 V_DATA = np.tile(DATA, (constants.N_TIMES, 1))  # shape = (60,  1024)
 
-EXPECTED_PREDICTIONS = np.array([[-0.04  , -0.0321, -0.024 , -0.016 , -0.008 ,  0.    ,  0.0081,
-        0.0161,  0.0241,  0.0322]])
+EXPECTED_PREDICTIONS = np.array(
+    [[-0.04, -0.0321, -0.024, -0.016, -0.008, 0., 0.0081, 0.0161, 0.0241, 0.0322]]
+)
 
 ########################################################################################################
 # test _DelayPredict
@@ -84,7 +85,7 @@ class test_VratioDelaySign(unittest.TestCase):
 
     def test_predict_produces_expected_output(self):
 
-        expected_predictions = np.sign(EXPECTED_PREDICTIONS).reshape(10,)
+        expected_predictions = np.sign(EXPECTED_PREDICTIONS).reshape(10)
         expected_predictions[expected_predictions == 0] = 1
         delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
         freqs = np.arange(constants.N_FREQS)
@@ -98,7 +99,9 @@ class test_VratioDelaySign(unittest.TestCase):
         predictor = VratioDelaySign(waterfalls)
         predictions = predictor.predict()
 
-        np.testing.assert_array_equal(expected_predictions, predictions.astype(np.float))
+        np.testing.assert_array_equal(
+            expected_predictions, predictions.astype(np.float)
+        )
 
 
 ########################################################################################################
@@ -150,7 +153,7 @@ class test_VratioDelayMagnitude(unittest.TestCase):
 
     def test_predict_produces_expected_output(self):
 
-        expected_predictions = np.abs(EXPECTED_PREDICTIONS.reshape(10,))
+        expected_predictions = np.abs(EXPECTED_PREDICTIONS.reshape(10))
         delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
         freqs = np.arange(constants.N_FREQS)
 
@@ -166,7 +169,6 @@ class test_VratioDelayMagnitude(unittest.TestCase):
         np.testing.assert_allclose(expected_predictions, predictions)
 
 
-
 # test VratioDelay
 class test_VratioDelay(unittest.TestCase):
 
@@ -180,7 +182,7 @@ class test_VratioDelay(unittest.TestCase):
 
     def test_predict_produces_expected_output(self):
 
-        expected_predictions = EXPECTED_PREDICTIONS.reshape(10,)
+        expected_predictions = EXPECTED_PREDICTIONS.reshape(10)
         delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
         freqs = np.arange(constants.N_FREQS)
 
@@ -194,6 +196,7 @@ class test_VratioDelay(unittest.TestCase):
         predictions = predictor.predict()
 
         np.testing.assert_allclose(expected_predictions, predictions)
+
 
 ########################################################################################################
 # test DelaySolver
