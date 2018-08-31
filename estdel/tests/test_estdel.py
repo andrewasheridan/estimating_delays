@@ -89,13 +89,13 @@ class test_VratioDelaySign(unittest.TestCase):
         delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
         freqs = np.arange(constants.N_FREQS)
 
-        visibilities = []
+        waterfalls = []
         for delay in delays:
 
-            v = np.exp(-2j * np.pi * (freqs * delay))
-            visibilities.append(v)
+            w = np.exp(-2j * np.pi * (freqs * delay))
+            waterfalls.append(w)
 
-        predictor = VratioDelaySign(visibilities)
+        predictor = VratioDelaySign(waterfalls)
         predictions = predictor.predict()
 
         np.testing.assert_array_equal(expected_predictions, predictions.astype(np.float))
@@ -154,13 +154,13 @@ class test_VratioDelayMagnitude(unittest.TestCase):
         delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
         freqs = np.arange(constants.N_FREQS)
 
-        visibilities = []
+        waterfalls = []
         for delay in delays:
 
-            v = np.exp(-2j * np.pi * (freqs * delay))
-            visibilities.append(v)
+            w = np.exp(-2j * np.pi * (freqs * delay))
+            waterfalls.append(w)
 
-        predictor = VratioDelayMagnitude(visibilities, conversion_fn=None)
+        predictor = VratioDelayMagnitude(waterfalls, conversion_fn=None)
         predictions = predictor.predict()
 
         np.testing.assert_allclose(expected_predictions, predictions)
@@ -184,13 +184,13 @@ class test_VratioDelay(unittest.TestCase):
         delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
         freqs = np.arange(constants.N_FREQS)
 
-        visibilities = []
+        waterfalls = []
         for delay in delays:
 
             v = np.exp(-2j * np.pi * (freqs * delay))
-            visibilities.append(v)
+            waterfalls.append(v)
 
-        predictor = VratioDelay(visibilities, conversion_fn=None)
+        predictor = VratioDelay(waterfalls, conversion_fn=None)
         predictions = predictor.predict()
 
         np.testing.assert_allclose(expected_predictions, predictions)
