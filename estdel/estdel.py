@@ -408,8 +408,8 @@ class DelaySolver(object):
         A (numpy array of ints): The matrix representing the watefalls
         b (numpy array of floats): A times x
         unique_ants (numpy array of ints): All the unique antennas in list_o_sep_pairs
-        v_ratio_row_predictions (numpy array of floats or list of floats): Predicted values
-        v_ratio_row_predictions_raw (list of floats): Predicted values with no conversion
+        watefall_time_predictions (numpy array of floats or list of floats): Predicted values
+        watefall_time_predictions_raw (list of floats): Predicted values with no conversion
         x (list floats): True delays in order of antenna
     """
 
@@ -462,8 +462,8 @@ class DelaySolver(object):
     def predict(self):
 
         self._predictor.predict()
-        self.v_ratio_row_predictions = self._predictor.predictions
-        self.v_ratio_row_predictions_raw = self._predictor.raw_predictions
+        self.watefall_time_predictions = self._predictor.predictions
+        self.watefall_time_predictions_raw = self._predictor.raw_predictions
 
     def _get_A_row(self, sep_pair):
         """_get_A_row

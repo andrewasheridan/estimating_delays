@@ -15,7 +15,7 @@ DATA = np.exp(
 ).reshape(
     -1, constants.N_FREQS
 )  # shape = (1,  1024)
-V_DATA = np.tile(DATA, (constants.N_TIMES, 1))  # shape = (60,  1024)
+WATERFALL = np.tile(DATA, (constants.N_TIMES, 1))  # shape = (60,  1024)
 
 EXPECTED_PREDICTIONS = np.array(
     [[-0.04, -0.0321, -0.024, -0.016, -0.008, 0., 0.0081, 0.0161, 0.0241, 0.0322]]
@@ -69,7 +69,7 @@ class test_DelaySign(unittest.TestCase):
     # test predict
     def test_predict_network_model_exists(self):
 
-        predictor = DelaySign(V_DATA)
+        predictor = DelaySign(WATERFALL)
         predictor._model_path = "not_a_model.pb"
         with self.assertRaises(IOError):
             predictor.predict()
@@ -77,7 +77,7 @@ class test_DelaySign(unittest.TestCase):
     # ???: How can I test this better?
     def test_predict_predicts(self):
         try:
-            predictor = DelaySign(V_DATA)
+            predictor = DelaySign(WATERFALL)
             predictions = predictor.predict()
         except:
             self.fail("Prediction failed unexpectedly")
@@ -117,7 +117,7 @@ class test_DelayMagnitude(unittest.TestCase):
             constants.ESTIMATE_WIDTH,
         )[: constants.N_TIMES]
 
-        predictor = DelayMagnitude(V_DATA, conversion_fn)
+        predictor = DelayMagnitude(WATERFALL, conversion_fn)
         self.assertRaises(
             ValueError, predictor._convert_predictions, raw_predictions
         )
@@ -131,7 +131,7 @@ class test_DelayMagnitude(unittest.TestCase):
             constants.ESTIMATE_WIDTH,
         )[: constants.N_TIMES]
 
-        predictor = DelayMagnitude(V_DATA, conversion_fn)
+        predictor = DelayMagnitude(WATERFALL, conversion_fn)
         self.assertRaises(
             ValueError, predictor._convert_predictions, raw_predictions
         )
@@ -139,7 +139,7 @@ class test_DelayMagnitude(unittest.TestCase):
     # test predict
     def test_network_model_exists(self):
 
-        predictor = DelayMagnitude(V_DATA)
+        predictor = DelayMagnitude(WATERFALL)
         predictor._model_path = "not_a_model.pb"
         with self.assertRaises(IOError):
             predictor.predict()
@@ -147,7 +147,7 @@ class test_DelayMagnitude(unittest.TestCase):
     # ???: How can I test this better?
     def test_predict_operates_without_failure(self):
         try:
-            predictor = DelayMagnitude(V_DATA)
+            predictor = DelayMagnitude(WATERFALL)
             predictions = predictor.predict()
         except:
             self.fail("Prediction failed unexpectedly")
@@ -176,7 +176,7 @@ class test_Delay(unittest.TestCase):
     # test predict
     def test_predict_operates_without_failure(self):
         try:
-            predictor = Delay(V_DATA)
+            predictor = Delay(WATERFALL)
             predictions = predictor.predict()
         except:
             self.fail("Prediction failed unexpectedly")
@@ -207,35 +207,35 @@ class test_DelaySolver(unittest.TestCase):
     def test_init_list_o_sep_pairs_capture(self):
 
         list_o_sep_pairs = [[(0, 1), (2, 3)]]
-        solver = DelaySolver(list_o_sep_pairs, V_DATA)
+        solver = DelaySolver(list_o_sep_pairs, WATERFALL)
         np.testing.assert_array_equal(solver._list_o_sep_pairs, list_o_sep_pairs)
 
     # test __init__
     def test_init_list_o_sep_is_list_or_array(self):
 
         list_o_sep_pairs = set((((0, 1), (2, 3))))
-        self.assertRaises(TypeError, DelaySolver, list_o_sep_pairs, V_DATA)
+        self.assertRaises(TypeError, DelaySolver, list_o_sep_pairs, WATERFALL)
 
     def test_init_list_o_sep_pairs_shape_1_is_2(self):
 
         list_o_sep_pairs = [[(1, 2)]]  # shape = (1, 1, 2)
-        self.assertRaises(ValueError, DelaySolver, list_o_sep_pairs, V_DATA)
+        self.assertRaises(ValueError, DelaySolver, list_o_sep_pairs, WATERFALL)
 
     def test_init_list_o_sep_pairs_shape_2_is_2(self):
 
         list_o_sep_pairs = [[(1,), (2,)]]  # shape = (1, 2, 1)
-        self.assertRaises(ValueError, DelaySolver, list_o_sep_pairs, V_DATA)
+        self.assertRaises(ValueError, DelaySolver, list_o_sep_pairs, WATERFALL)
 
     def test_init_list_o_sep_pairs_dtype_is_int(self):
 
         list_o_sep_pairs = [[(1., 2), (3, 4)]]
-        self.assertRaises(TypeError, DelaySolver, list_o_sep_pairs, V_DATA)
+        self.assertRaises(TypeError, DelaySolver, list_o_sep_pairs, WATERFALL)
 
     # test true_b
     def test_true_b_true_delays_keys_equals_unique_ants(self):
 
         list_o_sep_pairs = [[(0, 1), (2, 3)]]
-        solver = DelaySolver(list_o_sep_pairs, V_DATA)
+        solver = DelaySolver(list_o_sep_pairs, WATERFALL)
         true_ant_delays = {1: 1.2}
         self.assertRaises(AssertionError, solver.true_b, true_ant_delays)
 
@@ -243,7 +243,7 @@ class test_DelaySolver(unittest.TestCase):
     def test_predict_operates_without_failure(self):
         try:
             list_o_sep_pairs = [[(0, 1), (2, 3)]]
-            solver = DelaySolver(list_o_sep_pairs, V_DATA)
+            solver = DelaySolver(list_o_sep_pairs, WATERFALL)
             predictions = solver.predict()
         except:
             self.fail("Prediction failed unexpectedly")
