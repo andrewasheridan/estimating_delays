@@ -18,9 +18,9 @@ Clone git repo and navigate to directory and run `python setup.py install`
 
 ## Description
 
-estdel estimates the antenna cable delays in interferometer visibility data. 
+estdel estimates the antenna cable delays in interferometer waterfall data. 
 
-Complex visibility data is converted to angle and fed into two pretrained neural networks. One network predicts if the slope of the phase angle is positive or negative. Another network predicts the magnitude of the phase angle. These predictions are multiplied together to produce an estimate of the delay. Predictions are provided as raw predictions, unitless predictions directly from the networks, or predictions with units.  
+Complex waterfall data is converted to angle and fed into two pretrained neural networks. One network predicts if the slope of the phase angle is positive or negative. Another network predicts the magnitude of the phase angle. These predictions are multiplied together to produce an estimate of the delay. Predictions are provided as raw predictions, unitless predictions directly from the networks, or predictions with units.  
 
 ## Prediction Details
 
@@ -43,24 +43,24 @@ If you would like to use a different range of frequency channels of equal width,
 
 ## Usage
 In general:
- - Pass visibility data to one of the predictor objects 
+ - Pass waterfall data to one of the predictor objects 
  - Call its `predict` method:
 
 ```
 import estdel
 
-# pass complex visibilites to VratioDelay
-predictor = estdel.VratioDelay(visibilities)
+# pass complex waterfalls to VratioDelay
+predictor = estdel.VratioDelay(waterfalls)
 
 # call predict
 predictions = predictor.predict()
 ```
 
-`predictions` is a list of floats of the delays. If each visibility has `num_times` rows, then we can print the mean delay of each visibiliy like so:
+`predictions` is a list of floats of the delays. If each waterfall has `num_times` rows, then we can print the mean delay of each waterfall like so:
 
 ```
-# mean value for each visibility
-for i in range(num_visibilites):
+# mean value for each waterfall
+for i in range(num_waterfalls):
     mean_value = np.mean(predictions[i * num_times : (i + 1) * num_times])
     print("{:7.2f} ns".format(mean_value))
 ```
@@ -93,15 +93,15 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 On a system with a 24 core Intel Xeon CPU  @ 2.30GHz (Turbo 2.8), 128GB RAM, and an Nvidia GeForce GTX TITAN w/ 6GB RAM:
 
-Processing visibilities that are 60x1024:
- -   10 visibilities ~4 seconds
- -  100 visibilities ~7 seconds
- -  500 visibilities ~14 seconds
+Processing waterfalls that are 60x1024:
+ -   10 waterfalls ~4 seconds
+ -  100 waterfalls ~7 seconds
+ -  500 waterfalls ~14 seconds
  - More than ~600 causes an out of memory exception :( 
 
 Using an Nvidia GeForce GTX 1080 w/ 8GB RAM produces approximately the same results.
 
 ### CPU only
-On the Xeon system with the GPUs disabled, processing 500 visibilities takes ~50 seconds.
+On the Xeon system with the GPUs disabled, processing 500 waterfalls takes ~50 seconds.
 
-On a 2015 12" Macbook with a 2 core  Intel Core M  @ 1.1 GHz (Turbo 1.9), 8GB RAM, and with no GPU, processing 100 visibilities takes ~1 minute.
+On a 2015 12" Macbook with a 2 core  Intel Core M  @ 1.1 GHz (Turbo 1.9), 8GB RAM, and with no GPU, processing 100 waterfalls takes ~1 minute.

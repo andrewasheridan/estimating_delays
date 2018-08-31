@@ -1,13 +1,12 @@
-import unittest
 import numpy as np
+import unittest
 
-from estdel.estdel import (
-    _DelayPredict,
-    DelaySolver,
-    VratioDelayMagnitude,
-    VratioDelaySign,
-    VratioDelay,
-)
+from estdel.estdel import Delay
+from estdel.estdel import DelayMagnitude
+from estdel.estdel import DelaySign
+from estdel.estdel import DelaySolver
+from estdel.estdel import _DelayPredict
+
 import estdel.constants as constants
 
 
@@ -64,22 +63,22 @@ class test_DelayPredict(unittest.TestCase):
 
 
 ########################################################################################################
-# test VratioDelaySign
-class test_VratioDelaySign(unittest.TestCase):
+# test DelaySign
+class test_DelaySign(unittest.TestCase):
 
     # test predict
     def test_predict_network_model_exists(self):
 
-        _VratioDelaySign = VratioDelaySign(V_DATA)
-        _VratioDelaySign._model_path = "not_a_model.pb"
+        predictor = DelaySign(V_DATA)
+        predictor._model_path = "not_a_model.pb"
         with self.assertRaises(IOError):
-            _VratioDelaySign.predict()
+            predictor.predict()
 
     # ???: How can I test this better?
     def test_predict_predicts(self):
         try:
-            _VratioDelaySign = VratioDelaySign(V_DATA)
-            predictions = _VratioDelaySign.predict()
+            predictor = DelaySign(V_DATA)
+            predictions = predictor.predict()
         except:
             self.fail("Prediction failed unexpectedly")
 
@@ -96,7 +95,7 @@ class test_VratioDelaySign(unittest.TestCase):
             w = np.exp(-2j * np.pi * (freqs * delay))
             waterfalls.append(w)
 
-        predictor = VratioDelaySign(waterfalls)
+        predictor = DelaySign(waterfalls)
         predictions = predictor.predict()
 
         np.testing.assert_array_equal(
@@ -105,8 +104,8 @@ class test_VratioDelaySign(unittest.TestCase):
 
 
 ########################################################################################################
-# test VratioDelayMagnitude
-class test_VratioDelayMagnitude(unittest.TestCase):
+# test DelayMagnitude
+class test_DelayMagnitude(unittest.TestCase):
 
     # test _convert_precictions
     def test_convert_predictions_conversion_fn_correct_string(self):
@@ -117,9 +116,10 @@ class test_VratioDelayMagnitude(unittest.TestCase):
             constants.MAX_EST_MAG + constants.ESTIMATE_WIDTH,
             constants.ESTIMATE_WIDTH,
         )[: constants.N_TIMES]
-        _VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
+
+        predictor = DelayMagnitude(V_DATA, conversion_fn)
         self.assertRaises(
-            ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions
+            ValueError, predictor._convert_predictions, raw_predictions
         )
 
     def test_convert_predictions_conversion_fn_is_callable(self):
@@ -130,24 +130,25 @@ class test_VratioDelayMagnitude(unittest.TestCase):
             constants.MAX_EST_MAG + constants.ESTIMATE_WIDTH,
             constants.ESTIMATE_WIDTH,
         )[: constants.N_TIMES]
-        _VratioDelayMagnitude = VratioDelayMagnitude(V_DATA, conversion_fn)
+
+        predictor = DelayMagnitude(V_DATA, conversion_fn)
         self.assertRaises(
-            ValueError, _VratioDelayMagnitude._convert_predictions, raw_predictions
+            ValueError, predictor._convert_predictions, raw_predictions
         )
 
     # test predict
     def test_network_model_exists(self):
 
-        _VratioDelayMagnitude = VratioDelayMagnitude(V_DATA)
-        _VratioDelayMagnitude._model_path = "not_a_model.pb"
+        predictor = DelayMagnitude(V_DATA)
+        predictor._model_path = "not_a_model.pb"
         with self.assertRaises(IOError):
-            _VratioDelayMagnitude.predict()
+            predictor.predict()
 
     # ???: How can I test this better?
     def test_predict_operates_without_failure(self):
         try:
-            _VratioDelayMagnitude = VratioDelayMagnitude(V_DATA)
-            predictions = _VratioDelayMagnitude.predict()
+            predictor = DelayMagnitude(V_DATA)
+            predictions = predictor.predict()
         except:
             self.fail("Prediction failed unexpectedly")
 
@@ -163,20 +164,20 @@ class test_VratioDelayMagnitude(unittest.TestCase):
             w = np.exp(-2j * np.pi * (freqs * delay))
             waterfalls.append(w)
 
-        predictor = VratioDelayMagnitude(waterfalls, conversion_fn=None)
+        predictor = DelayMagnitude(waterfalls, conversion_fn=None)
         predictions = predictor.predict()
 
         np.testing.assert_allclose(expected_predictions, predictions)
 
 
-# test VratioDelay
-class test_VratioDelay(unittest.TestCase):
+# test Delay
+class test_Delay(unittest.TestCase):
 
     # test predict
     def test_predict_operates_without_failure(self):
         try:
-            _VratioDelay = VratioDelay(V_DATA)
-            predictions = _VratioDelay.predict()
+            predictor = Delay(V_DATA)
+            predictions = predictor.predict()
         except:
             self.fail("Prediction failed unexpectedly")
 
@@ -192,7 +193,7 @@ class test_VratioDelay(unittest.TestCase):
             v = np.exp(-2j * np.pi * (freqs * delay))
             waterfalls.append(v)
 
-        predictor = VratioDelay(waterfalls, conversion_fn=None)
+        predictor = Delay(waterfalls, conversion_fn=None)
         predictions = predictor.predict()
 
         np.testing.assert_allclose(expected_predictions, predictions)
@@ -206,8 +207,8 @@ class test_DelaySolver(unittest.TestCase):
     def test_init_list_o_sep_pairs_capture(self):
 
         list_o_sep_pairs = [[(0, 1), (2, 3)]]
-        _DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
-        np.testing.assert_array_equal(_DelaySolver._list_o_sep_pairs, list_o_sep_pairs)
+        solver = DelaySolver(list_o_sep_pairs, V_DATA)
+        np.testing.assert_array_equal(solver._list_o_sep_pairs, list_o_sep_pairs)
 
     # test __init__
     def test_init_list_o_sep_is_list_or_array(self):
@@ -234,16 +235,16 @@ class test_DelaySolver(unittest.TestCase):
     def test_true_b_true_delays_keys_equals_unique_ants(self):
 
         list_o_sep_pairs = [[(0, 1), (2, 3)]]
-        _DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
+        solver = DelaySolver(list_o_sep_pairs, V_DATA)
         true_ant_delays = {1: 1.2}
-        self.assertRaises(AssertionError, _DelaySolver.true_b, true_ant_delays)
+        self.assertRaises(AssertionError, solver.true_b, true_ant_delays)
 
     # test predict
     def test_predict_operates_without_failure(self):
         try:
             list_o_sep_pairs = [[(0, 1), (2, 3)]]
-            _DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
-            predictions = _DelaySolver.predict()
+            solver = DelaySolver(list_o_sep_pairs, V_DATA)
+            predictions = solver.predict()
         except:
             self.fail("Prediction failed unexpectedly")
 

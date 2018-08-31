@@ -12,16 +12,16 @@ Passes each row through one of (or both of) two trained neural networks.
     -   401 classes from 0.00 to 0.0400, each of width 0.0001
     -   default conversion to 401 classes from 0 to ~ 400 ns
 
-VratioDelaySign estimates the sign of the delay (< 0 or >= 0)
-VratioDelayMagnitude estimates the magnitude of the delay
-VratioDelay provides Delay_Sign * Delay_Magnitude
+DelaySign estimates the sign of the delay (< 0 or >= 0)
+DelayMagnitude estimates the magnitude of the delay
+Delay provides Delay_Sign * Delay_Magnitude
 
 tau = # slope in range -0.0400 to 0.0400
 nu = np.arange(1024) # unitless frequency channels
 phi = # phase in range 0 to 1
 data = np.exp(-2j*np.pi*(nu*tau + phi))
 
-estimator = estdel.VratioDelay(data)
+estimator = estdel.Delay(data)
 prediction = estimator.predict()
 
 # prediction should output tau
@@ -160,8 +160,8 @@ class _DelayPredict(object):
             sess.close()
 
 
-class VratioDelaySign(_DelayPredict):
-    """VratioDelaySign
+class DelaySign(_DelayPredict):
+    """DelaySign
     
     Estimates waterfall cable delay sign by using two pretrained neural networks.
     
@@ -243,8 +243,8 @@ def _default_conversion_fn(x):
     return x / channel_width_in_GHz
 
 
-class VratioDelayMagnitude(_DelayPredict):
-    """VratioDelayMagnitude
+class DelayMagnitude(_DelayPredict):
+    """DelayMagnitude
     
     Estimates watefall total cable delay by using two pretrained neural networks.
     
@@ -335,8 +335,8 @@ class VratioDelayMagnitude(_DelayPredict):
         return np.array(self.predictions)
 
 
-class VratioDelay(object):
-    """VratioDelay
+class Delay(object):
+    """Delay
     
     Estimates waterfall total cable delay by using two pretrained neural networks.
     
@@ -366,8 +366,8 @@ class VratioDelay(object):
         
         """
 
-        self._mag_evaluator = VratioDelayMagnitude(data, conversion_fn=conversion_fn)
-        self._sign_evaluator = VratioDelaySign(data)
+        self._mag_evaluator = DelayMagnitude(data, conversion_fn=conversion_fn)
+        self._sign_evaluator = DelaySign(data)
 
     def predict(self):
         """predict
@@ -457,7 +457,7 @@ class DelaySolver(object):
         self._make_A_from_list_o_sep_pairs()
         # ???: Should the creation of A and b be its own object?
 
-        self._predictor = VratioDelay(data, conversion_fn=conversion_fn)
+        self._predictor = Delay(data, conversion_fn=conversion_fn)
 
     def predict(self):
 
