@@ -1,6 +1,6 @@
 # estdel
-[![Build Status](https://travis-ci.org/andrewasheridan/estimating_delays.svg?branch=test_predict)](https://travis-ci.org/andrewasheridan/estimating_delays)
-[![Coverage Status](https://coveralls.io/repos/github/andrewasheridan/estimating_delays/badge.svg?branch=test_predict)](https://coveralls.io/github/andrewasheridan/estimating_delays?branch=test_predict)
+[![Build Status](https://travis-ci.org/andrewasheridan/estimating_delays.svg?branch=master)](https://travis-ci.org/andrewasheridan/estimating_delays)
+[![Coverage Status](https://coveralls.io/repos/github/andrewasheridan/estimating_delays/badge.svg?branch=master)](https://coveralls.io/github/andrewasheridan/estimating_delays?branch=master)
 
 Estimating interferometer antenna cable delays
 ## Prereqs
