@@ -1,14 +1,14 @@
 """estdel - for estimating delays
  - Andrew Sheridan sheridan@berkeley.edu
 
-Estimate the overall cable delay in visibility ratios.
+Estimate the overall cable delay in waterfalls of visibility ratios.
 
-For each list of 60 x 1024 complex visibility ratios produce 60 estimated cable delays.
+For each list of waterfalls of 60 x 1024 complex visibility ratios produce 60 estimated cable delays.
 
 Passes each row through one of (or both of) two trained neural networks. 
 
-Sign network classifies the sign of the delay as being positive or negative.
-Magnitude network classfies the magnitude of the delay as being in one of 401 classes.
+'Sign' network classifies the sign of the delay as being positive or negative.
+'Magnitude' network classfies the magnitude of the delay as being in one of 401 classes.
     -   401 classes from 0.00 to 0.0400, each of width 0.0001
     -   default conversion to 401 classes from 0 to ~ 400 ns
 
@@ -27,8 +27,8 @@ prediction = estimator.predict()
 # prediction should output tau
 """
 # from __future__ import absolute_import
-import pkg_resources
 import numpy as np
+import pkg_resources
 import tensorflow as tf
 
 try:
@@ -163,14 +163,14 @@ class _DelayPredict(object):
 class VratioDelaySign(_DelayPredict):
     """VratioDelaySign
     
-    Estimates visibility ratio cable delay sign by using two pretrained neural networks.
+    Estimates waterfall cable delay sign by using two pretrained neural networks.
     
     Methods:
         predict()
             - call to make sign prediction for data
     
     Attributes:
-        data (numpy array of floats): Input data of redundant visibility ratios is processed for predictions
+        data (numpy array of floats): Input data of waterfalls of redundant visibility ratios is processed for predictions
         predictions (numpy array of floats): The converted raw magnitude predictions (see predict())
         raw_predictions (list of floats): The raw magnitude predictions from the network
     """
@@ -187,7 +187,7 @@ class VratioDelaySign(_DelayPredict):
         
         Args:
             data (list of complex or numpy array of complex): shape = (N, 1024)
-                - redundant visibility ratios
+                - Input data of waterfalls of redundant visibility ratios is processed for predictions
         
         """
         _DelayPredict.__init__(self, data=data)
@@ -246,14 +246,14 @@ def _default_conversion_fn(x):
 class VratioDelayMagnitude(_DelayPredict):
     """VratioDelayMagnitude
     
-    Estimates visibility ratio total cable delay by using two pretrained neural networks.
+    Estimates watefall total cable delay by using two pretrained neural networks.
     
     Methods:
         predict()
             - call to make prediction
     
     Attributes:
-        data (numpy array of complex or list of complex): Visibility ratios
+        data (numpy array of complex or list of complex): Input data of waterfalls of redundant visibility ratios is processed for predictions
         predictions (numpy array of floats): The converted raw magnitude predictions (see predict())
         raw_predictions (list of floats): The raw magnitude predictions from the network
     """
@@ -268,7 +268,7 @@ class VratioDelayMagnitude(_DelayPredict):
         
         Args:
             data (numpy array of complex or list of complex): shape = (N, 1024)
-                - redundant visibility ratios
+                - Input data of waterfalls of redundant visibility ratios is processed for predictions
             conversion_fn (None, str, or function):
                 - None - Do no conversion, output predictions are the raw predictions
                 - 'default' - convert raw predictions to ns by using frequencies 
@@ -338,7 +338,7 @@ class VratioDelayMagnitude(_DelayPredict):
 class VratioDelay(object):
     """VratioDelay
     
-    Estimates visibility ratio total cable delay by using two pretrained neural networks.
+    Estimates waterfall total cable delay by using two pretrained neural networks.
     
     Methods:
         predict()
@@ -362,7 +362,7 @@ class VratioDelay(object):
         
         Args:
             data (list of complex floats): shape = (N, 1024)
-                - redundant visibility ratios
+                - Input data of waterfalls of redundant visibility ratios is processed for predictions
         
         """
 
@@ -398,14 +398,14 @@ class DelaySolver(object):
     
         data (numpy array of complex or list of complex): shape = (N, 60, 1024) or (N * 60, 1024)
             # ???: should we optionally allow less or more than 60 rows per visibility?
-            Complex visibility ratios made from the the corresponding redundant sep pairs in list_o_sep_pairs
+            Watefalls made from the the corresponding redundant sep pairs in list_o_sep_pairs
     
         true_ant_delays (dict): dict of delays with antennas as keys,
             ex : true_ant_delays[143] = 1.2
             if conversion_fn == 'default', ant delays should be in ns
     
     Attributes:
-        A (numpy array of ints): The matrix representing the redundant visibility ratios
+        A (numpy array of ints): The matrix representing the watefalls
         b (numpy array of floats): A times x
         unique_ants (numpy array of ints): All the unique antennas in list_o_sep_pairs
         v_ratio_row_predictions (numpy array of floats or list of floats): Predicted values
@@ -471,7 +471,7 @@ class DelaySolver(object):
         constructs a single row of A from a sep pair
 
         Args:
-            sep_pair (numpy array of numpy arrays ints): Antennas for this visibility
+            sep_pair (numpy array of numpy arrays ints): Antennas for this waterfall
 
         Returns;
             list of ints: a row of A
@@ -518,11 +518,11 @@ class DelaySolver(object):
         self.A = []
         for sep_pair in self._list_o_sep_pairs:
 
-            # each visibility ratio of height 60 has one sep_pair
-            # so make 60 identical rows in A for each visibility
+            # each waterfall of height 60 has one sep_pair
+            # so make 60 identical rows in A for each waterfall
             # so that A is the correct shape
             # (because the prediction will output a unique prediction
-            # for each row in the visibility ratio)
+            # for each row in the waterfall)
             # ???: Is there a better way to do this
             self.A.append(np.tile(self._get_A_row(sep_pair), (constants.N_TIMES, 1)))
 
@@ -531,7 +531,7 @@ class DelaySolver(object):
     def true_b(self, true_ant_delays):
         """ true_b
 
-        do A times x to find the true values for each visibility
+        do A times x to find the true values for each waterall
         where x is a list of the true antenna delays in order of antenna
 
         Returns:
@@ -542,7 +542,7 @@ class DelaySolver(object):
         # Every antenna present in unique antennas has to also be oresent in true antenna delays
         assert (
             np.array(sorted(true_ant_delays.keys())).all() == self.unique_ants.all()
-        ), "Each antenna present in a visibility needs a true delay here"
+        ), "Each antenna present in a waterfall needs a true delay here"
 
         self.x = [true_ant_delays[ant] for ant in self.unique_ants]
         self.b = np.matmul(self.A[:, self.unique_ants], self.x)
