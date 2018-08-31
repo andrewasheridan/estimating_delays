@@ -6,6 +6,7 @@ from estdel.estdel import (
     DelaySolver,
     VratioDelayMagnitude,
     VratioDelaySign,
+    VratioDelay,
 )
 import estdel.constants as constants
 
@@ -17,6 +18,8 @@ DATA = np.exp(
 )  # shape = (1,  1024)
 V_DATA = np.tile(DATA, (constants.N_TIMES, 1))  # shape = (60,  1024)
 
+EXPECTED_PREDICTIONS = np.array([[-0.04  , -0.0321, -0.024 , -0.016 , -0.008 ,  0.    ,  0.0081,
+        0.0161,  0.0241,  0.0322]])
 
 ########################################################################################################
 # test _DelayPredict
@@ -60,7 +63,7 @@ class test_DelayPredict(unittest.TestCase):
 
 
 ########################################################################################################
-# test VratioDelayMagnitude
+# test VratioDelaySign
 class test_VratioDelaySign(unittest.TestCase):
 
     # test predict
@@ -73,8 +76,29 @@ class test_VratioDelaySign(unittest.TestCase):
 
     # ???: How can I test this better?
     def test_predict_predicts(self):
-        _VratioDelaySign = VratioDelaySign(V_DATA)
-        predictions = _VratioDelaySign.predict()
+        try:
+            _VratioDelaySign = VratioDelaySign(V_DATA)
+            predictions = _VratioDelaySign.predict()
+        except:
+            self.fail("Prediction failed unexpectedly")
+
+    def test_predict_produces_expected_output(self):
+
+        expected_predictions = np.sign(EXPECTED_PREDICTIONS).reshape(10,)
+        expected_predictions[expected_predictions == 0] = 1
+        delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
+        freqs = np.arange(constants.N_FREQS)
+
+        visibilities = []
+        for delay in delays:
+
+            v = np.exp(-2j * np.pi * (freqs * delay))
+            visibilities.append(v)
+
+        predictor = VratioDelaySign(visibilities)
+        predictions = predictor.predict()
+
+        np.testing.assert_array_equal(expected_predictions, predictions.astype(np.float))
 
 
 ########################################################################################################
@@ -117,10 +141,59 @@ class test_VratioDelayMagnitude(unittest.TestCase):
             _VratioDelayMagnitude.predict()
 
     # ???: How can I test this better?
-    def test_predict_predicts(self):
-        _VratioDelayMagnitude = VratioDelayMagnitude(V_DATA)
-        predictions = _VratioDelayMagnitude.predict()
+    def test_predict_operates_without_failure(self):
+        try:
+            _VratioDelayMagnitude = VratioDelayMagnitude(V_DATA)
+            predictions = _VratioDelayMagnitude.predict()
+        except:
+            self.fail("Prediction failed unexpectedly")
 
+    def test_predict_produces_expected_output(self):
+
+        expected_predictions = np.abs(EXPECTED_PREDICTIONS.reshape(10,))
+        delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
+        freqs = np.arange(constants.N_FREQS)
+
+        visibilities = []
+        for delay in delays:
+
+            v = np.exp(-2j * np.pi * (freqs * delay))
+            visibilities.append(v)
+
+        predictor = VratioDelayMagnitude(visibilities, conversion_fn=None)
+        predictions = predictor.predict()
+
+        np.testing.assert_allclose(expected_predictions, predictions)
+
+
+
+# test VratioDelay
+class test_VratioDelay(unittest.TestCase):
+
+    # test predict
+    def test_predict_operates_without_failure(self):
+        try:
+            _VratioDelay = VratioDelay(V_DATA)
+            predictions = _VratioDelay.predict()
+        except:
+            self.fail("Prediction failed unexpectedly")
+
+    def test_predict_produces_expected_output(self):
+
+        expected_predictions = EXPECTED_PREDICTIONS.reshape(10,)
+        delays = np.arange(-0.0400, 0.0400, 0.0001)[::80]
+        freqs = np.arange(constants.N_FREQS)
+
+        visibilities = []
+        for delay in delays:
+
+            v = np.exp(-2j * np.pi * (freqs * delay))
+            visibilities.append(v)
+
+        predictor = VratioDelay(visibilities, conversion_fn=None)
+        predictions = predictor.predict()
+
+        np.testing.assert_allclose(expected_predictions, predictions)
 
 ########################################################################################################
 # test DelaySolver
@@ -161,6 +234,15 @@ class test_DelaySolver(unittest.TestCase):
         _DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
         true_ant_delays = {1: 1.2}
         self.assertRaises(AssertionError, _DelaySolver.true_b, true_ant_delays)
+
+    # test predict
+    def test_predict_operates_without_failure(self):
+        try:
+            list_o_sep_pairs = [[(0, 1), (2, 3)]]
+            _DelaySolver = DelaySolver(list_o_sep_pairs, V_DATA)
+            predictions = _DelaySolver.predict()
+        except:
+            self.fail("Prediction failed unexpectedly")
 
 
 ########################################################################################################
