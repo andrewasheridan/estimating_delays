@@ -59,11 +59,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "tensorflow>=1.8.0",
-        "numpy!=1.15.0",
     ],
     zip_safe=False,
     include_package_data=True,
     test_suite="estdel.tests",
 )
 
-# ???: On setup there are many 'Adding xxx to easy-install.pth file'. Why?
